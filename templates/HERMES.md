@@ -7,7 +7,7 @@ This project uses **LoopLab** loop engineering.
 - Cycle: observe → plan → act → verify → closeout
 - Durable state: `STATE.md`
 - Contract: `loop-spec.yaml` (validate with `looplab validate`)
-- Skills: `looplab`, `loop-triage` (install via `looplab install-hermes`)
+- Skill: `looplab` (modes: build|research|patch|audit|triage; install via `looplab attach`)
 
 ## Hard rules
 1. Do not mark a loop done without verification + receipt.

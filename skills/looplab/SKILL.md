@@ -8,7 +8,7 @@ description: >
 compatibility: Requires git and a terminal backend (local, docker, ssh, modal, or daytona)
 metadata:
   author: LoopLab
-  version: "0.2.3"
+  version: "0.2.4"
   sources: [agent-loop-engineering-kit, loop-engineer, cobusgreyling/loop-engineering, proofrail-LoopCraft]
   hermes:
     tags: [orchestration, multi-agent, loop-engineering, autonomous, coding, looplab, triage]
@@ -28,7 +28,7 @@ You are running **LoopLab** loop engineering on Hermes Agent.
 | **OPAV cycle** | Every unit of work: **observe → plan → act → verify → closeout** |
 | **STATE** | Read/update `STATE.md` for triage/durable memory across runs |
 | **Multi-agent** | `delegate_task(tasks=[...])` for parallel leaf agents |
-| **Triage** | Mode `triage` (or sibling skill `loop-triage`) is the loop's **eyes** — signal only, no invention |
+| **Triage** | Mode `triage` is the loop's **eyes** — signal only, no invention (built into this skill) |
 
 Core rule: *A loop is not done because the agent says so — only when verify passes, stop reason is recorded, and a receipt exists.*
 
@@ -47,24 +47,24 @@ looplab cron-recipe daily-triage
 looplab attach|detach
 ```
 
-Attached skills after `attach`: **`looplab`** (this package) + **`loop-triage`** (standalone cron/report skill; same triage rules as mode `triage` below).
+After `attach`, Hermes has one LoopLab skill package: **`looplab`** (includes mode `triage`).
 
 ---
 
 ## Mode: triage (built-in)
 
-When MODE=`triage` (or user says `/looplab triage`, "daily triage", "triage STATE"), **do not** run the multi-agent build loop. Run this short report-only path instead (same contract as sibling skill `loop-triage`).
+When MODE=`triage` (or user says `/looplab triage`, "daily triage", "triage STATE", cron prompt with skill `looplab`), **do not** run the multi-agent build loop. You are an expert engineering triage agent: produce a clean, prioritized list of things a loop should act on. Writes structured output to `STATE.md` (or Linear board if the session already uses it).
 
 ### Inputs
 - Recent CI / test failures (last 24h)
-- Open issues / tickets if visible
+- Open issues / Linear tickets if visible
 - Recent commits on main (last 24–48h)
 - Chat threads if the session has them
-- Current `STATE.md` (read before write)
+- Current state file (read before write)
 
 ### Output → merge into STATE.md
-1. **High-Priority** — act today (one-line, why, suggested next action, rough effort)
-2. **Watch** — monitor only
+1. **High-Priority Items** — act today (one-line, why it matters, suggested next action e.g. "draft minimal fix in isolated worktree", rough effort)
+2. **Watch Items** — monitor only
 3. **Noise / Ignore** — brief list of discarded signal
 4. **State Updates** — facts for next run + update **Last run** timestamp
 
@@ -74,7 +74,8 @@ End with a **≤5-line summary**. Default: **no source code edits**. OPAV still 
 - Brutally concise. Only High-Priority if a reasonable engineer would want to know **today**.
 - When in doubt → Watch or Noise, not work.
 - No architectural overhauls — signal, not invention.
-- Cron/standalone: `looplab cron-recipe daily-triage` → `hermes cron ... --skill loop-triage`.
+- Respect project skills/conventions when provided in context.
+- Cron: `looplab cron-recipe daily-triage` → `hermes cron ... --skill looplab` with a triage prompt.
 
 ---
 

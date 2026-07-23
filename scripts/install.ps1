@@ -87,7 +87,7 @@ Write-Host "Hermes only has junctions under: $SkillsDstRoot"
 Write-Host ""
 Write-Host "In Hermes chat try:" -ForegroundColor Yellow
 Write-Host "  /looplab"
-Write-Host "  /loop-triage   (or describe a triage task)"
+Write-Host "  /looplab triage"
 Write-Host ""
 Write-Host "Detach: powershell -File $Root\scripts\uninstall.ps1"
 Write-Host "CLI:    cd $Root; python -m pip install -e .; python -m looplab smoke"

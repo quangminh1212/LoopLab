@@ -75,9 +75,9 @@ cycle:
   - verify
   - closeout
 hermes:
-  skill: loop-triage
+  skill: looplab
   deliver: local
   delegate: false
   cron_prompt: >
-    Run loop-triage. Read STATE.md. Merge findings into High Priority and Watch List.
+    Run /looplab triage. Read STATE.md. Merge findings into High Priority and Watch List.
     Update Last run. Do not edit source code. End with a 5-line summary.

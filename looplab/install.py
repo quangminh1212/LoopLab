@@ -15,7 +15,7 @@ from pathlib import Path
 
 HERMES_ARTIFACT_RELPATHS: tuple[str, ...] = (
     "skills/looplab",
-    "skills/loop-triage",
+    "skills/loop-triage",  # legacy junction; removed on detach
     "skills/loop-engineer",
     "agents/looplab",
     "looplab-patterns",

@@ -102,7 +102,7 @@ def _cmd_attach(args: argparse.Namespace) -> int:
     print(f"attached {len(linked)} path(s) (junction/symlink + optional CLI, SoT = LoopLab repo)")
     for p in linked:
         print(f"  + {p}")
-    print("Hermes can use /looplab and loop-triage without code changes.")
+    print("Hermes can use /looplab (modes: build|research|patch|audit|triage) without code changes.")
     print("CLI available as: python -m looplab (Hermes agent venv when present).")
     print("Detach: looplab detach   or   scripts\\uninstall.ps1")
     return 0

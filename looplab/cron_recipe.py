@@ -32,18 +32,18 @@ RECIPES: dict[str, CronRecipe] = {
     "daily-triage": CronRecipe(
         name="Daily triage",
         schedule="0 7 * * 1-5",
-        skill="loop-triage",
+        skill="looplab",
         prompt=(
-            "Run loop-triage. Read STATE.md. Merge findings into High Priority and Watch List. "
+            "Run /looplab triage. Read STATE.md. Merge findings into High Priority and Watch List. "
             "Update Last run timestamp. Do not edit source code. End with a 5-line summary."
         ),
     ),
     "triage-pulse": CronRecipe(
         name="Triage pulse",
         schedule="0 */2 * * *",
-        skill="loop-triage",
+        skill="looplab",
         prompt=(
-            "Run loop-triage. Report obvious small wins only. Update STATE.md. No code changes."
+            "Run /looplab triage. Report obvious small wins only. Update STATE.md. No code changes."
         ),
     ),
     "daily-briefing": CronRecipe(

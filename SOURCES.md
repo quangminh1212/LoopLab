@@ -6,7 +6,7 @@ LoopLab **copies and adapts** the following public materials. Not git submodules
 |---|---|---|
 | [AlekseiUL/agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | MIT | `looplab/validate.py` safety rules, `score.py` categories, `privacy.py`, dry-run receipt shape |
 | [vibhasdutta/loop-engineer](https://github.com/vibhasdutta/loop-engineer) `platforms/hermes` | MIT | `skills/looplab/SKILL.md`, `skills/looplab/agents/**`, `skills/looplab/scripts/init-loop.*` (rebranded looplab) |
-| [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | MIT | `skills/loop-triage/SKILL.md`, `patterns/hermes/*`, `templates/*budget*`, STATE templates, `looplab/cron_recipe.py` |
+| [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | MIT | triage rules in `skills/looplab/SKILL.md` (mode triage), `patterns/hermes/*`, `templates/*budget*`, STATE templates, `looplab/cron_recipe.py` |
 | [410979729/proofrail-hermes](https://github.com/410979729/proofrail-hermes) (LoopCraft) | check upstream | `looplab/cycle.py` OPAV, `patterns/opav/LoopCraft-DESIGN.md` |
 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | MIT | host runtime mapping only |
 

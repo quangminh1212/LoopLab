@@ -6,7 +6,7 @@
 |---|---|---|
 | **Contract L0–L5** | [agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | `looplab validate/score/dry-run/privacy-scan` + receipt |
 | **Multi-step skill** | [loop-engineer](https://github.com/vibhasdutta/loop-engineer) (Hermes platform) | `skills/looplab/` + `agents/` + `scripts/init-loop.*` |
-| **Triage + cron + STATE** | [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | `skills/loop-triage/`, `patterns/hermes/`, `looplab cron-recipe` |
+| **Triage + cron + STATE** | [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | mode `triage` trong `skills/looplab/`, `patterns/hermes/`, `looplab cron-recipe` |
 | **OPAV cycle** | [proofrail / LoopCraft](https://github.com/410979729/proofrail-hermes) | `looplab/cycle.py`, `looplab cycle`, cycle[] trong loop-spec |
 
 ```text
@@ -38,7 +38,7 @@ python -m looplab detach
 | Module | SoT | Hermes nhận | Sửa hermes-agent? |
 |--------|-----|-------------|-------------------|
 | **Zalo** | `C:\Dev\Hermes_Zalo` | `plugins/zalo-platform` + bridge (junction) | **Không** |
-| **LoopLab** | `C:\Dev\LoopLab` | `skills/looplab`, `skills/loop-triage` (junction) | **Không** |
+| **LoopLab** | `C:\Dev\LoopLab` | `skills/looplab` (junction; gồm mode triage) | **Không** |
 
 ## CLI
 
@@ -59,7 +59,7 @@ python -m looplab detach
 /looplab build|research|patch|audit|triage
 ```
 
-Mode **triage** = report-only (`STATE.md` priorities); same rules as skill sibling `loop-triage` (cron: `--skill loop-triage`).
+Mode **triage** = report-only (`STATE.md` priorities), gộp trong skill `looplab` (cron: `--skill looplab`).
 
 Init loop stack (sau attach, path trỏ SoT qua junction):
 
@@ -72,7 +72,7 @@ Init loop stack (sau attach, path trỏ SoT qua junction):
 
 ```powershell
 python -m looplab cron-recipe daily-triage
-# paste lệnh hermes cron create ... --deliver local --skill loop-triage
+# paste lệnh hermes cron create ... --deliver local --skill looplab
 ```
 
 Pattern đầy đủ: `patterns/hermes/daily-triage.md`, `patterns/hermes/pr-babysitter.md`.
@@ -82,8 +82,7 @@ Pattern đầy đủ: `patterns/hermes/daily-triage.md`, `patterns/hermes/pr-bab
 ```text
 LoopLab/
   looplab/                 # CLI package (contract + cycle + cron + install)
-  skills/looplab/          # multi-step skill + agents + init-loop scripts
-  skills/loop-triage/      # cobus triage skill
+  skills/looplab/          # multi-step skill + agents + init-loop + mode triage
   patterns/hermes/         # cron / triage docs
   patterns/opav/           # LoopCraft design notes
   templates/               # loop-spec, STATE, HERMES, budget/run-log

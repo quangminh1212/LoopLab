@@ -29,8 +29,10 @@ def test_cron_recipes():
     assert "daily-triage" in list_recipes()
     text = render_recipe("daily-triage")
     assert "hermes cron create" in text
-    assert "loop-triage" in text
+    assert "--skill looplab" in text
+    assert "triage" in text.lower()
     assert "--deliver local" in text
+    assert "loop-triage" not in text
 
 
 def test_multi_step_skill_vendored():
@@ -39,11 +41,12 @@ def test_multi_step_skill_vendored():
     text = skill.read_text(encoding="utf-8")
     assert "delegate_task" in text
     assert "observe" in text.lower() or "OPAV" in text
+    assert "Mode: triage" in text or "mode `triage`" in text.lower() or "MODE=`triage`" in text
     agents = ROOT / "skills/looplab/agents"
     for name in ("researcher.md", "executor.md", "planner.md", "memory-keeper.md"):
         assert (agents / name).is_file(), name
     assert (ROOT / "skills/looplab/scripts/init-loop.ps1").is_file()
-    assert (ROOT / "skills/loop-triage/SKILL.md").is_file()
+    assert not (ROOT / "skills/loop-triage").exists()
     assert (ROOT / "patterns/hermes/daily-triage.md").is_file()
 
 
