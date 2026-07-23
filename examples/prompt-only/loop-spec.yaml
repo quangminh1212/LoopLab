@@ -1,0 +1,35 @@
+# Intentionally weak — scores as not_loop_engineered
+schema_version: "1.0"
+name: vague-prompt
+goal: do stuff
+risk_class: L3
+trigger:
+  type: cron
+  schedule: null
+inputs:
+  required: []
+state:
+  backend: none
+  location: ""
+  read_before_run: false
+tools:
+  allowed: []
+  forbidden_actions: []
+isolation:
+  mode: none
+verification:
+  deterministic_checks: []
+  review_checks: []
+stop_conditions:
+  max_iterations: 99
+  max_runtime_minutes: 9999
+  success_signal: agent_says_done
+  failure_policy: keep_going
+human_gate:
+  required_for: []
+  approval_format: ""
+outputs:
+  artifacts: []
+receipt:
+  required: false
+  path: ""

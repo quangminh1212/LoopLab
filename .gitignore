@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+.env.*
+
+# Local loop runs / generated
+runs/
+*.latest.md
+!examples/**/*.md
+state/*.json
+!state/.gitkeep
+receipts/*
+!receipts/.gitkeep
+!receipts/README.md
+loop-stack/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Hermes local install markers
+.hermes-install-log.txt

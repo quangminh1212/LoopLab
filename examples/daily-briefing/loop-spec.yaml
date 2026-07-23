@@ -1,0 +1,80 @@
+schema_version: "1.0"
+name: daily-briefing
+goal: Produce a weekday morning briefing from STATE.md and local repo signals, write report + receipt, no code edits.
+risk_class: L1
+trigger:
+  type: cron
+  schedule: "0 7 * * 1-5"
+  timezone: Asia/Ho_Chi_Minh
+inputs:
+  required:
+    - STATE.md
+  optional:
+    - git recent commits
+state:
+  backend: file
+  location: STATE.md
+  read_before_run: true
+  update_after_run: true
+tools:
+  allowed:
+    - read_files
+    - search_files
+    - write_report
+    - terminal_readonly
+  forbidden_actions:
+    - delete_files
+    - edit_source
+    - access_secrets
+    - public_posting
+    - production_deploy
+    - payments
+isolation:
+  mode: read_only
+  notes: Report-only briefing. --deliver local until trusted.
+verification:
+  deterministic_checks:
+    - name: report_exists
+      method: check reports/daily-briefing.md exists and non-empty
+      pass_condition: file length > 100 chars
+    - name: receipt_stop_reason
+      method: parse receipt for stop_reason
+      pass_condition: stop_reason present
+  review_checks:
+    - name: human_skim
+      reviewer: human
+      rubric: 5-line summary readable without context dump
+  definition_of_done:
+    - report written
+    - STATE Last run updated
+    - receipt written
+stop_conditions:
+  max_iterations: 1
+  max_runtime_minutes: 20
+  success_signal: briefing_written
+  failure_policy: stop_and_report
+  stop_on_repeated_error: true
+human_gate:
+  required_for:
+    - public_posting
+    - secrets
+    - production_deploy
+  approval_format: "APPROVE LOOP ACTION: <action> / <scope> / <rollback>"
+outputs:
+  artifacts:
+    - reports/daily-briefing.md
+receipt:
+  required: true
+  path: receipts/daily-briefing.latest.md
+cycle:
+  - observe
+  - plan
+  - act
+  - verify
+  - closeout
+hermes:
+  skill: looplab
+  deliver: local
+  cron_prompt: >
+    Run LoopLab daily-briefing. Read STATE.md. Produce reports/daily-briefing.md
+    and receipt. No code edits. End with 5-line summary.

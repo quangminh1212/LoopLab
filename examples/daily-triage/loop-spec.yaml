@@ -1,0 +1,80 @@
+schema_version: "1.0"
+name: daily-triage
+goal: Triage repo health into STATE.md High Priority and Watch List; report-only by default.
+risk_class: L1
+trigger:
+  type: cron
+  schedule: "0 7 * * 1-5"
+  timezone: Asia/Ho_Chi_Minh
+inputs:
+  required:
+    - STATE.md
+  optional:
+    - git status
+state:
+  backend: file
+  location: STATE.md
+  read_before_run: true
+  update_after_run: true
+tools:
+  allowed:
+    - read_files
+    - search_files
+    - terminal_readonly
+    - update_state
+  forbidden_actions:
+    - delete_files
+    - apply_patches
+    - access_secrets
+    - public_posting
+    - production_deploy
+    - payments
+isolation:
+  mode: read_only
+  notes: Week-1 triage is report-only with --deliver local.
+verification:
+  deterministic_checks:
+    - name: state_timestamp
+      method: STATE.md contains updated Last run
+      pass_condition: Last run is ISO-like or human date today
+    - name: summary_lines
+      method: final message line count
+      pass_condition: summary <= 5 lines
+  review_checks:
+    - name: priority_sanity
+      reviewer: human
+      rubric: High Priority items are actionable and not noise
+  definition_of_done:
+    - STATE.md updated
+    - 5-line summary produced
+    - no source edits
+stop_conditions:
+  max_iterations: 1
+  max_runtime_minutes: 25
+  success_signal: triage_summary_written
+  failure_policy: stop_and_report
+  stop_on_repeated_error: true
+human_gate:
+  required_for:
+    - apply_patches
+    - public_posting
+    - secrets
+  approval_format: "APPROVE LOOP ACTION: <action> / <scope> / <rollback>"
+outputs:
+  artifacts:
+    - STATE.md
+receipt:
+  required: true
+  path: receipts/daily-triage.latest.md
+cycle:
+  - observe
+  - plan
+  - act
+  - verify
+  - closeout
+hermes:
+  skill: loop-triage
+  deliver: local
+  cron_prompt: >
+    Run loop-triage. Read STATE.md. Merge findings into High Priority and Watch List.
+    Update Last run. Do not edit source code. End with a 5-line summary.
