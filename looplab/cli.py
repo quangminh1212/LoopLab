@@ -1,4 +1,4 @@
-"""LoopLab CLI — contract + multi-step + triage cron + OPAV."""
+"""LoopLab CLI — contract + multi-step + triage cron + OPAV + Hermes attach."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 from looplab import __version__
 from looplab.cron_recipe import list_recipes, render_recipe
 from looplab.cycle import CycleState, render_cycle_doc
-from looplab.install import default_hermes_home, install_skills, uninstall_from_hermes
+from looplab.install import attach_to_hermes, default_hermes_home, uninstall_from_hermes
 from looplab.io_util import load_spec
 from looplab.privacy import format_report, scan
 from looplab.receipt import render_receipt_md, write_dry_run
@@ -90,44 +90,43 @@ def _cmd_privacy_scan(args: argparse.Namespace) -> int:
     return 0 if not findings else 1
 
 
-def _cmd_install_hermes(args: argparse.Namespace) -> int:
-    """Opt-in only — LoopLab is meant to stay outside Hermes Agent."""
-    if not args.yes:
-        print(
-            "WARNING: LoopLab is designed to live at C:\\Dev\\LoopLab only.\n"
-            "Installing into Hermes Agent home is optional and discouraged.\n"
-            "Re-run with --yes to confirm, or use: looplab uninstall-hermes",
-            file=sys.stderr,
-        )
-        return 2
+def _cmd_attach(args: argparse.Namespace) -> int:
+    """Attach skills into Hermes via junctions — no hermes-agent source edits."""
     home = Path(args.hermes_home) if args.hermes_home else default_hermes_home()
     try:
-        installed = install_skills(home, force=args.force)
-    except FileNotFoundError as e:
+        linked = attach_to_hermes(home)
+    except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
     print(f"Hermes home: {home}")
-    print(f"installed/updated {len(installed)} path(s)")
-    for p in installed[:30]:
+    print(f"attached {len(linked)} path(s) (junction/symlink, SoT = LoopLab repo)")
+    for p in linked:
         print(f"  + {p}")
-    if len(installed) > 30:
-        print(f"  ... +{len(installed) - 30} more")
-    print("skills: looplab (multi-step agents) + loop-triage")
-    print("to remove later: looplab uninstall-hermes")
+    print("Hermes can use /looplab and loop-triage without code changes.")
+    print("Detach: looplab detach   or   scripts\\uninstall.ps1")
     return 0
 
 
-def _cmd_uninstall_hermes(args: argparse.Namespace) -> int:
+def _cmd_detach(args: argparse.Namespace) -> int:
     home = Path(args.hermes_home) if args.hermes_home else default_hermes_home()
     removed = uninstall_from_hermes(home)
     print(f"Hermes home: {home}")
     if not removed:
         print("nothing to remove (already clean)")
         return 0
-    print(f"removed {len(removed)} path(s)")
+    print(f"detached {len(removed)} path(s)")
     for p in removed:
         print(f"  - {p}")
     return 0
+
+
+# aliases used in older docs
+def _cmd_install_hermes(args: argparse.Namespace) -> int:
+    return _cmd_attach(args)
+
+
+def _cmd_uninstall_hermes(args: argparse.Namespace) -> int:
+    return _cmd_detach(args)
 
 
 def _cmd_cron_recipe(args: argparse.Namespace) -> int:
@@ -149,7 +148,6 @@ def _cmd_cycle(args: argparse.Namespace) -> int:
         return 0
     state = CycleState()
     if args.mutate:
-        state.phase = state.phase.__class__("act") if False else state.phase
         from looplab.cycle import Phase
 
         state.phase = Phase.ACT
@@ -187,13 +185,6 @@ def _cmd_smoke(args: argparse.Namespace) -> int:
             print(f"  [FAIL] {name}: {v.errors[:3]}")
         else:
             print(f"  [OK] {name}: score={s.score} ({s.band})")
-    priv = scan(root)
-    # ignore findings inside patterns/opav design dump if any
-    priv = [f for f in priv if "LoopCraft-DESIGN" not in f["file"]]
-    if priv:
-        print(f"  [WARN] privacy findings: {len(priv)}")
-        for f in priv[:5]:
-            print(f"    {f['file']}:{f['line']} {f['type']}")
     print(f"smoke: {len(examples)} example(s), failed={failed}")
     return 0 if failed == 0 else 1
 
@@ -202,8 +193,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="looplab",
         description=(
-            "LoopLab — Hermes loop engineering: "
-            "contract (kit) + multi-step skill (loop-engineer) + triage/cron (cobus) + OPAV (LoopCraft)"
+            "LoopLab — external Hermes module: "
+            "contract + skills (attach via junction, no hermes-agent code changes)"
         ),
     )
     p.add_argument("--version", action="version", version=f"looplab {__version__}")
@@ -238,19 +229,24 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=_cmd_privacy_scan)
 
     s = sub.add_parser(
-        "install-hermes",
-        help="OPT-IN: copy skills into Hermes home (discouraged; LoopLab stays external)",
+        "attach",
+        help="Attach LoopLab skills into Hermes via junctions (no core code change)",
     )
     s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
-    s.add_argument("--force", action="store_true", help="Replace skill directories entirely")
-    s.add_argument("--yes", action="store_true", help="Confirm install into Hermes Agent")
+    s.set_defaults(func=_cmd_attach)
+
+    s = sub.add_parser("detach", help="Detach LoopLab junctions from Hermes home")
+    s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
+    s.set_defaults(func=_cmd_detach)
+
+    s = sub.add_parser("install-hermes", help="Alias of attach")
+    s.add_argument("--hermes-home", default=None)
+    s.add_argument("--force", action="store_true")
+    s.add_argument("--yes", action="store_true", help="ignored (attach always allowed)")
     s.set_defaults(func=_cmd_install_hermes)
 
-    s = sub.add_parser(
-        "uninstall-hermes",
-        help="Remove LoopLab skills/prefill artifacts from Hermes Agent home",
-    )
-    s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
+    s = sub.add_parser("uninstall-hermes", help="Alias of detach")
+    s.add_argument("--hermes-home", default=None)
     s.set_defaults(func=_cmd_uninstall_hermes)
 
     s = sub.add_parser("cron-recipe", help="Print hermes cron recipe (daily-triage / briefing)")
@@ -263,7 +259,13 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("cycle", help="Show OPAV cycle panel (LoopCraft discipline)")
     s.add_argument("--doc", action="store_true", help="Full cycle documentation")
     s.add_argument("--mutate", action="store_true", help="Simulate a mutation")
-    s.add_argument("--verify", type=lambda x: x.lower() != "false", nargs="?", const=True, default=None)
+    s.add_argument(
+        "--verify",
+        type=lambda x: x.lower() != "false",
+        nargs="?",
+        const=True,
+        default=None,
+    )
     s.set_defaults(func=_cmd_cycle)
 
     s = sub.add_parser("smoke", help="Validate bundled examples")

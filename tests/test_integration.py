@@ -64,18 +64,27 @@ def test_privacy_scan_repo_clean_enough():
     assert not bad, bad
 
 
-def test_uninstall_hermes_is_safe():
-    from looplab.install import HERMES_ARTIFACT_RELPATHS, uninstall_from_hermes
+def test_attach_detach_hermes_junctions():
+    import sys
     import tempfile
     from pathlib import Path
 
+    from looplab.install import HERMES_ARTIFACT_RELPATHS, attach_to_hermes, uninstall_from_hermes
+
+    if sys.platform != "win32":
+        # symlink path still valid on unix
+        pass
     with tempfile.TemporaryDirectory() as td:
         home = Path(td)
-        (home / "skills" / "looplab").mkdir(parents=True)
-        (home / "skills" / "looplab" / "SKILL.md").write_text("x", encoding="utf-8")
-        (home / "prefill_crew_loop.json").write_text("[]", encoding="utf-8")
+        (home / "skills").mkdir(parents=True)
+        linked = attach_to_hermes(home)
+        assert any(p.name == "looplab" for p in linked)
+        skill = home / "skills" / "looplab"
+        assert skill.exists()
+        assert (skill / "SKILL.md").is_file()
+        # SoT file is reachable through link
+        assert "looplab" in (skill / "SKILL.md").read_text(encoding="utf-8").lower()
         removed = uninstall_from_hermes(home)
-        assert any(p.name == "looplab" or p.name == "prefill_crew_loop.json" for p in removed)
-        assert not (home / "skills" / "looplab").exists()
-        assert not (home / "prefill_crew_loop.json").exists()
+        assert any(p.name == "looplab" for p in removed)
+        assert not skill.exists()
     assert "prefill_crew_loop.json" in HERMES_ARTIFACT_RELPATHS

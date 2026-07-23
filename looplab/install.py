@@ -1,16 +1,18 @@
-"""Optional install/uninstall of LoopLab artifacts into Hermes home.
+"""Attach/detach LoopLab to Hermes Agent without modifying hermes-agent source.
 
-Default policy: LoopLab lives only at C:\\Dev\\LoopLab (external).
-Do not keep loop skills / prefill / agents inside Hermes Agent home.
+Same external-module pattern as Hermes_Zalo:
+  - SoT stays in LoopLab repo
+  - Hermes home only gets junctions (skills) or is cleaned on detach
 """
 
 from __future__ import annotations
 
 import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
-# Paths we may have written under HERMES_HOME (uninstall targets)
 HERMES_ARTIFACT_RELPATHS: tuple[str, ...] = (
     "skills/looplab",
     "skills/loop-triage",
@@ -43,19 +45,102 @@ def default_hermes_home() -> Path:
     return Path(local) / "hermes" if local else Path.home() / ".hermes"
 
 
-def _copy_tree(src: Path, dest: Path, *, force: bool) -> list[Path]:
-    installed: list[Path] = []
-    if force and dest.exists():
-        shutil.rmtree(dest)
-    dest.mkdir(parents=True, exist_ok=True)
-    for item in src.rglob("*"):
-        if item.is_file():
-            rel = item.relative_to(src)
-            target = dest / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(item, target)
-            installed.append(target)
-    return installed
+def skill_packages(root: Path | None = None) -> list[Path]:
+    skills = (root or repo_root()) / "skills"
+    if not skills.is_dir():
+        return []
+    out: list[Path] = []
+    for d in sorted(skills.iterdir()):
+        if d.is_dir() and (d / "SKILL.md").is_file():
+            out.append(d)
+    return out
+
+
+def _is_link_or_junction(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    if sys.platform != "win32":
+        return False
+    # FILE_ATTRIBUTE_REPARSE_POINT = 0x400
+    try:
+        import ctypes
+
+        GetFileAttributesW = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
+        GetFileAttributesW.argtypes = [ctypes.c_wchar_p]
+        GetFileAttributesW.restype = ctypes.c_uint32
+        INVALID = 0xFFFFFFFF
+        attrs = GetFileAttributesW(str(path))
+        if attrs == INVALID:
+            return False
+        return bool(attrs & 0x400)
+    except Exception:
+        return False
+
+
+def _rm_link(path: Path) -> None:
+    if not path.exists() and not path.is_symlink():
+        return
+    if sys.platform == "win32" and (path.is_dir() or _is_link_or_junction(path)):
+        # junction or dir symlink: rmdir removes link, not target
+        subprocess.run(["cmd", "/c", "rmdir", str(path)], check=False, capture_output=True)
+        if path.exists() and path.is_symlink():
+            path.unlink(missing_ok=True)
+        return
+    if path.is_symlink() or path.is_file():
+        path.unlink(missing_ok=True)
+        return
+    if path.is_dir():
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def ensure_link(dst: Path, src: Path) -> Path:
+    """Junction on Windows, symlink elsewhere. Re-points if already a link."""
+    src_r = src.resolve()
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists() or dst.is_symlink() or _is_link_or_junction(dst):
+        if _is_link_or_junction(dst) or dst.is_symlink():
+            _rm_link(dst)
+        else:
+            raise FileExistsError(
+                f"Path exists and is not a junction: {dst} — remove manually or detach first"
+            )
+    if sys.platform == "win32":
+        r = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(dst), str(src_r)],
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0 or not (dst.exists() or _is_link_or_junction(dst)):
+            raise RuntimeError(f"mklink failed: {r.stdout}\n{r.stderr}")
+    else:
+        os.symlink(src_r, dst, target_is_directory=True)
+    return dst
+
+
+def attach_to_hermes(hermes_home: Path | None = None) -> list[Path]:
+    """Attach LoopLab skills into Hermes via junctions/symlinks (no core patch)."""
+    home = hermes_home or default_hermes_home()
+    if not home.exists():
+        raise FileNotFoundError(f"Hermes home not found: {home}")
+    packages = skill_packages()
+    if not packages:
+        raise FileNotFoundError(f"no skill packages under {repo_root() / 'skills'}")
+
+    linked: list[Path] = []
+    skills_root = home / "skills"
+    skills_root.mkdir(parents=True, exist_ok=True)
+    for pkg in packages:
+        dst = skills_root / pkg.name
+        ensure_link(dst, pkg)
+        linked.append(dst)
+
+    ctx = repo_root() / "templates" / "HERMES.md"
+    if ctx.is_file():
+        marker = home / "looplab-HERMES.md"
+        shutil.copy2(ctx, marker)
+        linked.append(marker)
+
+    return linked
 
 
 def install_skills(
@@ -63,52 +148,35 @@ def install_skills(
     *,
     force: bool = False,
 ) -> list[Path]:
-    """Opt-in only. Prefer keeping LoopLab outside Hermes Agent."""
-    home = hermes_home or default_hermes_home()
-    src_skills = repo_root() / "skills"
-    if not src_skills.is_dir():
-        raise FileNotFoundError(f"skills directory missing: {src_skills}")
-
-    dest_root = home / "skills"
-    dest_root.mkdir(parents=True, exist_ok=True)
-    installed: list[Path] = []
-
-    for skill_dir in sorted(src_skills.iterdir()):
-        if not skill_dir.is_dir() or not (skill_dir / "SKILL.md").is_file():
-            continue
-        dest = dest_root / skill_dir.name
-        installed.extend(_copy_tree(skill_dir, dest, force=force))
-
-    agents_src = src_skills / "looplab" / "agents"
-    if agents_src.is_dir():
-        agents_dest = home / "agents" / "looplab"
-        installed.extend(_copy_tree(agents_src, agents_dest, force=force))
-
-    context = repo_root() / "templates" / "HERMES.md"
-    if context.is_file():
-        marker = home / "looplab-HERMES.md"
-        shutil.copy2(context, marker)
-        installed.append(marker)
-
-    patterns = repo_root() / "patterns" / "hermes"
-    if patterns.is_dir():
-        dest_pat = home / "looplab-patterns" / "hermes"
-        installed.extend(_copy_tree(patterns, dest_pat, force=force))
-
-    return installed
+    del force
+    return attach_to_hermes(hermes_home)
 
 
 def uninstall_from_hermes(hermes_home: Path | None = None) -> list[Path]:
-    """Remove LoopLab / legacy loop prefill artifacts from Hermes Agent home."""
+    """Detach LoopLab links/artifacts from Hermes home (SoT repo untouched)."""
     home = hermes_home or default_hermes_home()
     removed: list[Path] = []
+
+    names = {p.name for p in skill_packages()}
+    names.update({"looplab", "loop-triage", "loop-engineer"})
+    for name in sorted(names):
+        path = home / "skills" / name
+        if path.exists() or path.is_symlink() or _is_link_or_junction(path):
+            _rm_link(path)
+            removed.append(path)
+
     for rel in HERMES_ARTIFACT_RELPATHS:
-        path = home / rel
-        if not path.exists() and not path.is_symlink():
+        if rel.startswith("skills/"):
             continue
-        if path.is_dir() and not path.is_symlink():
-            shutil.rmtree(path)
-        else:
+        path = home / rel
+        if not (path.exists() or path.is_symlink() or _is_link_or_junction(path)):
+            continue
+        if path.is_file() or path.is_symlink():
             path.unlink(missing_ok=True)
+        elif _is_link_or_junction(path):
+            _rm_link(path)
+        elif path.is_dir() and path.name in {"looplab", "looplab-patterns"}:
+            shutil.rmtree(path, ignore_errors=True)
         removed.append(path)
+
     return removed

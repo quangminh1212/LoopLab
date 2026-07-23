@@ -16,49 +16,53 @@ prompt  →  loop-spec (L0–L5)  →  validate/score/dry-run
                                 →  observe→plan→act→verify→closeout + receipt
 ```
 
-## Cài đặt (LoopLab độc lập — **không** nhét vào Hermes Agent)
+## Cài đặt & gắn vào Hermes (plugin-style, **không sửa code Hermes**)
+
+Giống **Hermes_Zalo**: SoT ở repo riêng, Hermes chỉ nhận **junction** (skill/plugin).
 
 ```powershell
 cd C:\Dev\LoopLab
 python -m pip install -e ".[dev]"
+
+# Attach — junction skills -> %LOCALAPPDATA%\hermes\skills\
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
+# hoặc:
+python -m looplab attach
+
+# Detach
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
+# hoặc:
+python -m looplab detach
 ```
 
-**Policy:** loop engineering chỉ sống ở `C:\Dev\LoopLab`.  
-Không cài skill/prefill vào Hermes home. Nếu từng cài nhầm:
-
-```powershell
-python -m looplab uninstall-hermes
-```
-
-`install-hermes` vẫn có (opt-in, cần `--yes`) nhưng **không khuyến nghị**.
+| Module | SoT | Hermes nhận | Sửa hermes-agent? |
+|--------|-----|-------------|-------------------|
+| **Zalo** | `C:\Dev\Hermes_Zalo` | `plugins/zalo-platform` + bridge (junction) | **Không** |
+| **LoopLab** | `C:\Dev\LoopLab` | `skills/looplab`, `skills/loop-triage` (junction) | **Không** |
 
 ## CLI
 
-| Lệnh | Nguồn logic |
+| Lệnh | Việc |
 |---|---|
+| `looplab attach` / `detach` | Gắn/gỡ skill vào Hermes (junction) |
 | `looplab init` | scaffold project + STATE + HERMES |
-| `looplab validate` | kit schema + safety (danger aliases, L3 isolation, cron L3 block) |
-| `looplab score` | kit category weights (contract/safety/verification/…) |
-| `looplab dry-run` | kit contract dry-run + receipt |
-| `looplab privacy-scan` | kit secret/path scan |
-| `looplab cron-recipe daily-triage` | cobus hermes cron |
-| `looplab cycle` / `cycle --doc` | LoopCraft OPAV panel |
-| `looplab uninstall-hermes` | **gỡ** skill/prefill LoopLab khỏi Hermes home |
-| `looplab install-hermes --yes` | opt-in (không khuyến nghị) copy skill vào Hermes |
-| `looplab smoke` | examples regression |
+| `looplab validate` / `score` / `dry-run` | contract L0–L5 |
+| `looplab privacy-scan` | quét secret |
+| `looplab cron-recipe daily-triage` | lệnh `hermes cron` |
+| `looplab cycle` | panel OPAV |
+| `looplab smoke` | regression examples |
 
-## Multi-step trong Hermes
+## Multi-step trong Hermes (sau attach)
 
 ```text
 /looplab
+/looplab build|research|patch|audit
 ```
 
-Hoặc `/looplab build|research|patch|audit` — team: resource-scout, researcher, planner, agent-factory, executor, auditor, verifier, memory-keeper qua `delegate_task`.
-
-Init loop stack:
+Init loop stack (sau attach, path trỏ SoT qua junction):
 
 ```powershell
-& "$env:USERPROFILE\.hermes\skills\looplab\scripts\init-loop.ps1" `
+& "$env:LOCALAPPDATA\hermes\skills\looplab\scripts\init-loop.ps1" `
   -LoopId "my-goal" -Goal "..." -Stop "..." -Git no -Mode build -Platform hermes
 ```
 
