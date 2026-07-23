@@ -117,7 +117,45 @@ def ensure_link(dst: Path, src: Path) -> Path:
     return dst
 
 
-def attach_to_hermes(hermes_home: Path | None = None) -> list[Path]:
+def hermes_agent_python(hermes_home: Path | None = None) -> Path | None:
+    """Return Hermes agent venv python if present (Windows/Linux layout)."""
+    home = hermes_home or default_hermes_home()
+    candidates = [
+        home / "hermes-agent" / "venv" / "Scripts" / "python.exe",
+        home / "hermes-agent" / "venv" / "bin" / "python",
+        home / "hermes-agent" / ".venv" / "Scripts" / "python.exe",
+        home / "hermes-agent" / ".venv" / "bin" / "python",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
+def ensure_cli_in_hermes_venv(hermes_home: Path | None = None) -> Path | None:
+    """Editable-install looplab into Hermes agent venv so terminal tool can run `python -m looplab`."""
+    py = hermes_agent_python(hermes_home)
+    if py is None:
+        return None
+    root = repo_root()
+    r = subprocess.run(
+        [str(py), "-m", "pip", "install", "-e", str(root), "-q"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if r.returncode != 0:
+        raise RuntimeError(
+            f"pip install into Hermes venv failed ({py}):\n{r.stdout}\n{r.stderr}"
+        )
+    return py
+
+
+def attach_to_hermes(
+    hermes_home: Path | None = None,
+    *,
+    install_cli: bool = True,
+) -> list[Path]:
     """Attach LoopLab skills into Hermes via junctions/symlinks (no core patch)."""
     home = hermes_home or default_hermes_home()
     if not home.exists():
@@ -139,6 +177,15 @@ def attach_to_hermes(hermes_home: Path | None = None) -> list[Path]:
         marker = home / "looplab-HERMES.md"
         shutil.copy2(ctx, marker)
         linked.append(marker)
+
+    if install_cli:
+        try:
+            py = ensure_cli_in_hermes_venv(home)
+            if py is not None:
+                linked.append(py)
+        except RuntimeError as e:
+            # Skills still attached; CLI install is best-effort for terminal tool UX.
+            print(f"warning: {e}", file=sys.stderr)
 
     return linked
 

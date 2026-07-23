@@ -8,7 +8,7 @@ description: >
 compatibility: Requires git and a terminal backend (local, docker, ssh, modal, or daytona)
 metadata:
   author: LoopLab
-  version: "0.2.0"
+  version: "0.2.2"
   sources: [agent-loop-engineering-kit, loop-engineer, cobusgreyling/loop-engineering, proofrail-LoopCraft]
   hermes:
     tags: [orchestration, multi-agent, loop-engineering, autonomous, coding, looplab]
@@ -31,15 +31,19 @@ You are running **LoopLab** loop engineering on Hermes Agent.
 
 Core rule: *A loop is not done because the agent says so — only when verify passes, stop reason is recorded, and a receipt exists.*
 
-LoopLab is **external** (`C:\Dev\LoopLab`) — do **not** install into Hermes Agent home.
-If skills were copied into Hermes before: `python -m looplab uninstall-hermes`
+LoopLab is **external** (SoT repo, e.g. `C:\Dev\LoopLab`). Attach with junctions only — no hermes-agent source edits:
+
+```text
+python -m looplab attach     # Windows: junctions under %LOCALAPPDATA%\hermes\skills\
+python -m looplab detach
+```
 
 CLI contract tools (local, no agent exec):
 
 ```text
 looplab validate|score|dry-run|privacy-scan <loop-spec.yaml>
 looplab cron-recipe daily-triage
-looplab uninstall-hermes
+looplab attach|detach
 ```
 
 ---
@@ -63,7 +67,8 @@ Run the init script — creates all state files, copies agent files, and writes 
 
 **Bash (macOS/Linux):**
 ```bash
-bash ~/.hermes/skills/looplab/scripts/init-loop.sh \
+# Prefer HERMES_HOME; fallback ~/.hermes
+bash "${HERMES_HOME:-$HOME/.hermes}/skills/looplab/scripts/init-loop.sh" \
   --loop-id <LOOP_ID> \
   --goal "<GOAL>" \
   --stop "all tasks in loop-stack/<LOOP_ID>/PLAN.md checked" \
@@ -74,7 +79,9 @@ bash ~/.hermes/skills/looplab/scripts/init-loop.sh \
 
 **PowerShell (Windows):**
 ```powershell
-& "$env:USERPROFILE\.hermes\skills\looplab\scripts\init-loop.ps1" `
+# Windows Hermes home is %LOCALAPPDATA%\hermes (or $env:HERMES_HOME)
+$HermesSkills = if ($env:HERMES_HOME) { Join-Path $env:HERMES_HOME 'skills\looplab' } else { Join-Path $env:LOCALAPPDATA 'hermes\skills\looplab' }
+& "$HermesSkills\scripts\init-loop.ps1" `
   -LoopId "<LOOP_ID>" `
   -Goal "<GOAL>" `
   -Stop "all tasks in loop-stack/<LOOP_ID>/PLAN.md checked" `
@@ -83,14 +90,14 @@ bash ~/.hermes/skills/looplab/scripts/init-loop.sh \
   -Platform hermes
 ```
 
-If the script is missing, run it from the LoopLab repo (not Hermes home):
+If the junction is missing, run from the LoopLab SoT repo:
 
 ```powershell
 cd C:\Dev\LoopLab
 & .\skills\looplab\scripts\init-loop.ps1 -LoopId "..." -Goal "..." -Stop "..." -Git no -Mode build -Platform hermes
 ```
 
-Point `-SkillDir` / agents at `C:\Dev\LoopLab\skills\looplab` — keep Hermes Agent clean of LoopLab files.
+Init resolves agents from HERMES_HOME / LOCALAPPDATA junction, then falls back to the script package (SoT).
 
 The script creates `loop-stack/<LOOP_ID>/`, project-local agent files + knowledge-sources/, and `verifier.md` with the actual stop condition substituted.
 
@@ -232,7 +239,8 @@ Write `REPORT.md` inside the renamed loop directory and print summary.
 
 ## Rules
 
-- **File copy**: `~/.hermes/skills/looplab/agents/*.md` → `.hermes/agents/`. Never write manually.
+- **File copy**: Hermes skill package `agents/*.md` → workspace `.hermes/agents/` (via init-loop). Never write manually.
+
 - **Global data first**: every agent reads `.global/MEMORY.md` + `.global/TOOLS.md` before acting.
 - **Parallel first**: `delegate_task(tasks=[...])` takes one array of task definitions per call and dispatches every entry concurrently, up to the concurrency cap. It is **synchronous** — the call blocks until every task in the array returns, and if the parent turn is interrupted mid-call, all active children are cancelled and their work discarded. Default cap: **3 concurrent tasks**, configurable via `delegation.max_concurrent_children` in config.yaml (floor of 1, no ceiling).
 - **Nested delegation is restricted**: leaf subagents (the default role) cannot call `delegate_task` themselves — only `role="orchestrator"` subagents retain it, and only when `delegation.max_spawn_depth` is raised above its default of 1. looplab's agents are all leaf subagents; this doesn't affect the design, just don't expect an executor to be able to further delegate sub-tasks.
@@ -250,5 +258,6 @@ Write `REPORT.md` inside the renamed loop directory and print summary.
 - **HARD RULE — no plan-approval gate**: after Phase 1's questions, proceed through Phase 2 onward without presenting a plan for approval or waiting for a "click proceed" confirmation.
 - No resume support: every invocation starts a fresh loop. On completion: rename to `<LOOP_ID>_DONE/` (bookkeeping only).
 - **HERMES.md**: ensure `HERMES.md` (from `platforms/hermes/HERMES.md`) is in the project root for workspace context.
-- **MCP config**: Hermes reads MCP servers from `~/.hermes/config.yaml` under `mcp_servers`.
+- **MCP config**: Hermes reads MCP servers from Hermes home `config.yaml` (`HERMES_HOME` or `%LOCALAPPDATA%\hermes` on Windows) under `mcp_servers`.
+
 - **Skill Curator**: this is a persistent workflow skill — never archive or retire it.

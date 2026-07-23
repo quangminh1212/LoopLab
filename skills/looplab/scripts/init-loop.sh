@@ -63,7 +63,17 @@ case "$PLATFORM" in
     [[ ! -d "$SKILL_DIR" ]] && SKILL_DIR="$HOME/.claude/skills/looplab"
     ;;
   hermes)
-    SKILL_DIR="$HOME/.hermes/skills/looplab"
+    # Prefer HERMES_HOME, then ~/.hermes, then XDG/LOCALAPPDATA-style, then script package.
+    SCRIPT_SKILL="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    SKILL_DIR=""
+    for c in \
+      "${HERMES_HOME:+$HERMES_HOME/skills/looplab}" \
+      "$HOME/.hermes/skills/looplab" \
+      "${LOCALAPPDATA:+$LOCALAPPDATA/hermes/skills/looplab}" \
+      "$SCRIPT_SKILL"; do
+      [[ -n "$c" && -f "$c/SKILL.md" ]] && SKILL_DIR="$c" && break
+    done
+    [[ -z "$SKILL_DIR" ]] && SKILL_DIR="$SCRIPT_SKILL"
     AGENTS_DIR=".hermes/agents"
     ;;
   codex)

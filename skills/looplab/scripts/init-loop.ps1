@@ -48,7 +48,26 @@ switch ($Platform) {
     if (-not (Test-Path $SkillDir)) { $SkillDir = "$env:USERPROFILE\.claude\skills\looplab" }
   }
   "hermes" {
-    $SkillDir  = "$env:USERPROFILE\.hermes\skills\looplab"
+    # Windows Hermes home is %LOCALAPPDATA%\hermes (not %USERPROFILE%\.hermes).
+    # Prefer HERMES_HOME, then known homes, then this script's skill package (SoT).
+    $scriptSkill = Split-Path -Parent $PSScriptRoot
+    $candidates = @()
+    if ($env:HERMES_HOME) {
+      $candidates += (Join-Path $env:HERMES_HOME 'skills\looplab')
+    }
+    if ($env:LOCALAPPDATA) {
+      $candidates += (Join-Path $env:LOCALAPPDATA 'hermes\skills\looplab')
+    }
+    $candidates += "$env:USERPROFILE\.hermes\skills\looplab"
+    $candidates += $scriptSkill
+    $SkillDir = $null
+    foreach ($c in $candidates) {
+      if ($c -and (Test-Path (Join-Path $c 'SKILL.md'))) {
+        $SkillDir = $c
+        break
+      }
+    }
+    if (-not $SkillDir) { $SkillDir = $scriptSkill }
     $AgentsDir = ".hermes\agents"
   }
   "codex" {

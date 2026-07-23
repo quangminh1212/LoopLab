@@ -94,15 +94,16 @@ def _cmd_attach(args: argparse.Namespace) -> int:
     """Attach skills into Hermes via junctions — no hermes-agent source edits."""
     home = Path(args.hermes_home) if args.hermes_home else default_hermes_home()
     try:
-        linked = attach_to_hermes(home)
+        linked = attach_to_hermes(home, install_cli=not args.no_cli)
     except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
     print(f"Hermes home: {home}")
-    print(f"attached {len(linked)} path(s) (junction/symlink, SoT = LoopLab repo)")
+    print(f"attached {len(linked)} path(s) (junction/symlink + optional CLI, SoT = LoopLab repo)")
     for p in linked:
         print(f"  + {p}")
     print("Hermes can use /looplab and loop-triage without code changes.")
+    print("CLI available as: python -m looplab (Hermes agent venv when present).")
     print("Detach: looplab detach   or   scripts\\uninstall.ps1")
     return 0
 
@@ -233,6 +234,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Attach LoopLab skills into Hermes via junctions (no core code change)",
     )
     s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
+    s.add_argument(
+        "--no-cli",
+        action="store_true",
+        help="Skip editable install of looplab into Hermes agent venv",
+    )
     s.set_defaults(func=_cmd_attach)
 
     s = sub.add_parser("detach", help="Detach LoopLab junctions from Hermes home")

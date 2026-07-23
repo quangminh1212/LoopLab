@@ -77,7 +77,7 @@ def test_attach_detach_hermes_junctions():
     with tempfile.TemporaryDirectory() as td:
         home = Path(td)
         (home / "skills").mkdir(parents=True)
-        linked = attach_to_hermes(home)
+        linked = attach_to_hermes(home, install_cli=False)
         assert any(p.name == "looplab" for p in linked)
         skill = home / "skills" / "looplab"
         assert skill.exists()
@@ -88,3 +88,53 @@ def test_attach_detach_hermes_junctions():
         assert any(p.name == "looplab" for p in removed)
         assert not skill.exists()
     assert "prefill_crew_loop.json" in HERMES_ARTIFACT_RELPATHS
+
+
+def test_init_loop_hermes_resolves_skill_without_userprofile_dot_hermes():
+    """Windows Hermes home is LOCALAPPDATA\\hermes; script must still copy agents."""
+    import os
+    import subprocess
+    import sys
+    import tempfile
+
+    if sys.platform != "win32":
+        return
+
+    script = ROOT / "skills" / "looplab" / "scripts" / "init-loop.ps1"
+    assert script.is_file()
+    with tempfile.TemporaryDirectory() as td:
+        env = os.environ.copy()
+        # Force miss of classic ~/.hermes so resolution must use script SoT or LOCALAPPDATA
+        env.pop("HERMES_HOME", None)
+        r = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script),
+                "-LoopId",
+                "smoke-init",
+                "-Goal",
+                "test init path",
+                "-Stop",
+                "all tasks checked",
+                "-Git",
+                "no",
+                "-Mode",
+                "research",
+                "-Platform",
+                "hermes",
+            ],
+            cwd=td,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
+        assert r.returncode == 0, r.stdout + r.stderr
+        agents = Path(td) / ".hermes" / "agents"
+        assert (agents / "researcher.md").is_file(), r.stdout + r.stderr
+        assert (agents / "executor.md").is_file()
+        assert (Path(td) / "loop-stack" / "smoke-init" / "PLAN.md").is_file()

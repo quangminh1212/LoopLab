@@ -62,6 +62,24 @@ if (Test-Path $ctxSrc) {
   Write-Host "Wrote $ctxDst (context note, not a skill)"
 }
 
+# Best-effort: editable install CLI into Hermes agent venv (terminal tool can run python -m looplab)
+$HermesPyCandidates = @(
+  (Join-Path $Hermes 'hermes-agent\venv\Scripts\python.exe'),
+  (Join-Path $Hermes 'hermes-agent\.venv\Scripts\python.exe')
+)
+foreach ($py in $HermesPyCandidates) {
+  if (Test-Path $py) {
+    Write-Host "Installing looplab CLI into Hermes venv: $py"
+    & $py -m pip install -e $Root -q
+    if ($LASTEXITCODE -ne 0) {
+      Write-Warning "pip install into Hermes venv failed (skills still attached)"
+    } else {
+      Write-Host "CLI OK: $py -m looplab"
+    }
+    break
+  }
+}
+
 Write-Host ""
 Write-Host "OK. LoopLab attached without modifying hermes-agent code." -ForegroundColor Green
 Write-Host "Skills live at SoT: $SkillsSrc"
