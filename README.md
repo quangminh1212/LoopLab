@@ -16,15 +16,21 @@ prompt  →  loop-spec (L0–L5)  →  validate/score/dry-run
                                 →  observe→plan→act→verify→closeout + receipt
 ```
 
-## Cài đặt
+## Cài đặt (LoopLab độc lập — **không** nhét vào Hermes Agent)
 
 ```powershell
 cd C:\Dev\LoopLab
 python -m pip install -e ".[dev]"
-python -m looplab install-hermes --force
 ```
 
-Cài skill vào `~/.hermes/skills/looplab` (agents + init scripts) và `loop-triage`.
+**Policy:** loop engineering chỉ sống ở `C:\Dev\LoopLab`.  
+Không cài skill/prefill vào Hermes home. Nếu từng cài nhầm:
+
+```powershell
+python -m looplab uninstall-hermes
+```
+
+`install-hermes` vẫn có (opt-in, cần `--yes`) nhưng **không khuyến nghị**.
 
 ## CLI
 
@@ -37,7 +43,8 @@ Cài skill vào `~/.hermes/skills/looplab` (agents + init scripts) và `loop-tri
 | `looplab privacy-scan` | kit secret/path scan |
 | `looplab cron-recipe daily-triage` | cobus hermes cron |
 | `looplab cycle` / `cycle --doc` | LoopCraft OPAV panel |
-| `looplab install-hermes` | vendor skills → Hermes home |
+| `looplab uninstall-hermes` | **gỡ** skill/prefill LoopLab khỏi Hermes home |
+| `looplab install-hermes --yes` | opt-in (không khuyến nghị) copy skill vào Hermes |
 | `looplab smoke` | examples regression |
 
 ## Multi-step trong Hermes

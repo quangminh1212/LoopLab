@@ -1,10 +1,25 @@
-"""Install LoopLab skills (multi-step agents + triage) into Hermes home."""
+"""Optional install/uninstall of LoopLab artifacts into Hermes home.
+
+Default policy: LoopLab lives only at C:\\Dev\\LoopLab (external).
+Do not keep loop skills / prefill / agents inside Hermes Agent home.
+"""
 
 from __future__ import annotations
 
 import os
 import shutil
 from pathlib import Path
+
+# Paths we may have written under HERMES_HOME (uninstall targets)
+HERMES_ARTIFACT_RELPATHS: tuple[str, ...] = (
+    "skills/looplab",
+    "skills/loop-triage",
+    "skills/loop-engineer",
+    "agents/looplab",
+    "looplab-patterns",
+    "looplab-HERMES.md",
+    "prefill_crew_loop.json",
+)
 
 
 def repo_root() -> Path:
@@ -15,13 +30,17 @@ def default_hermes_home() -> Path:
     env = os.environ.get("HERMES_HOME")
     if env:
         return Path(env)
-    for candidate in (
+    local = os.environ.get("LOCALAPPDATA")
+    candidates = [
         Path.home() / ".hermes",
         Path(os.environ.get("USERPROFILE", str(Path.home()))) / ".hermes",
-    ):
+    ]
+    if local:
+        candidates.insert(0, Path(local) / "hermes")
+    for candidate in candidates:
         if candidate.exists():
             return candidate
-    return Path.home() / ".hermes"
+    return Path(local) / "hermes" if local else Path.home() / ".hermes"
 
 
 def _copy_tree(src: Path, dest: Path, *, force: bool) -> list[Path]:
@@ -44,6 +63,7 @@ def install_skills(
     *,
     force: bool = False,
 ) -> list[Path]:
+    """Opt-in only. Prefer keeping LoopLab outside Hermes Agent."""
     home = hermes_home or default_hermes_home()
     src_skills = repo_root() / "skills"
     if not src_skills.is_dir():
@@ -59,7 +79,6 @@ def install_skills(
         dest = dest_root / skill_dir.name
         installed.extend(_copy_tree(skill_dir, dest, force=force))
 
-    # Also mirror looplab agents into ~/.hermes/agents for project-less lookup
     agents_src = src_skills / "looplab" / "agents"
     if agents_src.is_dir():
         agents_dest = home / "agents" / "looplab"
@@ -77,3 +96,19 @@ def install_skills(
         installed.extend(_copy_tree(patterns, dest_pat, force=force))
 
     return installed
+
+
+def uninstall_from_hermes(hermes_home: Path | None = None) -> list[Path]:
+    """Remove LoopLab / legacy loop prefill artifacts from Hermes Agent home."""
+    home = hermes_home or default_hermes_home()
+    removed: list[Path] = []
+    for rel in HERMES_ARTIFACT_RELPATHS:
+        path = home / rel
+        if not path.exists() and not path.is_symlink():
+            continue
+        if path.is_dir() and not path.is_symlink():
+            shutil.rmtree(path)
+        else:
+            path.unlink(missing_ok=True)
+        removed.append(path)
+    return removed

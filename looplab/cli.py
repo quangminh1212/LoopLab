@@ -9,7 +9,7 @@ from pathlib import Path
 from looplab import __version__
 from looplab.cron_recipe import list_recipes, render_recipe
 from looplab.cycle import CycleState, render_cycle_doc
-from looplab.install import default_hermes_home, install_skills
+from looplab.install import default_hermes_home, install_skills, uninstall_from_hermes
 from looplab.io_util import load_spec
 from looplab.privacy import format_report, scan
 from looplab.receipt import render_receipt_md, write_dry_run
@@ -91,6 +91,15 @@ def _cmd_privacy_scan(args: argparse.Namespace) -> int:
 
 
 def _cmd_install_hermes(args: argparse.Namespace) -> int:
+    """Opt-in only — LoopLab is meant to stay outside Hermes Agent."""
+    if not args.yes:
+        print(
+            "WARNING: LoopLab is designed to live at C:\\Dev\\LoopLab only.\n"
+            "Installing into Hermes Agent home is optional and discouraged.\n"
+            "Re-run with --yes to confirm, or use: looplab uninstall-hermes",
+            file=sys.stderr,
+        )
+        return 2
     home = Path(args.hermes_home) if args.hermes_home else default_hermes_home()
     try:
         installed = install_skills(home, force=args.force)
@@ -104,7 +113,20 @@ def _cmd_install_hermes(args: argparse.Namespace) -> int:
     if len(installed) > 30:
         print(f"  ... +{len(installed) - 30} more")
     print("skills: looplab (multi-step agents) + loop-triage")
-    print("verify: hermes skills list")
+    print("to remove later: looplab uninstall-hermes")
+    return 0
+
+
+def _cmd_uninstall_hermes(args: argparse.Namespace) -> int:
+    home = Path(args.hermes_home) if args.hermes_home else default_hermes_home()
+    removed = uninstall_from_hermes(home)
+    print(f"Hermes home: {home}")
+    if not removed:
+        print("nothing to remove (already clean)")
+        return 0
+    print(f"removed {len(removed)} path(s)")
+    for p in removed:
+        print(f"  - {p}")
     return 0
 
 
@@ -215,10 +237,21 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("root", nargs="?", default=".", help="Root path to scan")
     s.set_defaults(func=_cmd_privacy_scan)
 
-    s = sub.add_parser("install-hermes", help="Install looplab + loop-triage skills into Hermes")
+    s = sub.add_parser(
+        "install-hermes",
+        help="OPT-IN: copy skills into Hermes home (discouraged; LoopLab stays external)",
+    )
     s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
     s.add_argument("--force", action="store_true", help="Replace skill directories entirely")
+    s.add_argument("--yes", action="store_true", help="Confirm install into Hermes Agent")
     s.set_defaults(func=_cmd_install_hermes)
+
+    s = sub.add_parser(
+        "uninstall-hermes",
+        help="Remove LoopLab skills/prefill artifacts from Hermes Agent home",
+    )
+    s.add_argument("--hermes-home", default=None, help="Override HERMES_HOME")
+    s.set_defaults(func=_cmd_uninstall_hermes)
 
     s = sub.add_parser("cron-recipe", help="Print hermes cron recipe (daily-triage / briefing)")
     s.add_argument("name", nargs="?", default="daily-triage", help="Recipe name")

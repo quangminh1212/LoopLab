@@ -31,18 +31,15 @@ You are running **LoopLab** loop engineering on Hermes Agent.
 
 Core rule: *A loop is not done because the agent says so — only when verify passes, stop reason is recorded, and a receipt exists.*
 
-Install / update skills from LoopLab repo:
-
-```powershell
-cd C:\Dev\LoopLab
-python -m looplab install-hermes
-```
+LoopLab is **external** (`C:\Dev\LoopLab`) — do **not** install into Hermes Agent home.
+If skills were copied into Hermes before: `python -m looplab uninstall-hermes`
 
 CLI contract tools (local, no agent exec):
 
 ```text
 looplab validate|score|dry-run|privacy-scan <loop-spec.yaml>
 looplab cron-recipe daily-triage
+looplab uninstall-hermes
 ```
 
 ---
@@ -86,14 +83,16 @@ bash ~/.hermes/skills/looplab/scripts/init-loop.sh \
   -Platform hermes
 ```
 
-If the script is missing, install from LoopLab:
+If the script is missing, run it from the LoopLab repo (not Hermes home):
 
 ```powershell
 cd C:\Dev\LoopLab
-python -m looplab install-hermes --force
+& .\skills\looplab\scripts\init-loop.ps1 -LoopId "..." -Goal "..." -Stop "..." -Git no -Mode build -Platform hermes
 ```
 
-The script creates `loop-stack/<LOOP_ID>/`, `.hermes/agents/` with all agent .md files + knowledge-sources/, and `verifier.md` with the actual stop condition substituted.
+Point `-SkillDir` / agents at `C:\Dev\LoopLab\skills\looplab` — keep Hermes Agent clean of LoopLab files.
+
+The script creates `loop-stack/<LOOP_ID>/`, project-local agent files + knowledge-sources/, and `verifier.md` with the actual stop condition substituted.
 
 ---
 

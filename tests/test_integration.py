@@ -62,3 +62,20 @@ def test_privacy_scan_repo_clean_enough():
     # no high-signal secret patterns expected in source
     bad = [f for f in findings if f["type"] in {"openai_key", "github_token", "private_key", "aws_access_key"}]
     assert not bad, bad
+
+
+def test_uninstall_hermes_is_safe():
+    from looplab.install import HERMES_ARTIFACT_RELPATHS, uninstall_from_hermes
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as td:
+        home = Path(td)
+        (home / "skills" / "looplab").mkdir(parents=True)
+        (home / "skills" / "looplab" / "SKILL.md").write_text("x", encoding="utf-8")
+        (home / "prefill_crew_loop.json").write_text("[]", encoding="utf-8")
+        removed = uninstall_from_hermes(home)
+        assert any(p.name == "looplab" or p.name == "prefill_crew_loop.json" for p in removed)
+        assert not (home / "skills" / "looplab").exists()
+        assert not (home / "prefill_crew_loop.json").exists()
+    assert "prefill_crew_loop.json" in HERMES_ARTIFACT_RELPATHS
