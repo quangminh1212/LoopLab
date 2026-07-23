@@ -68,6 +68,7 @@ DEFAULT_LOOP_SPEC: dict[str, Any] = {
         "success_signal": "receipt_written",
         "failure_policy": "stop_and_report",
         "stop_on_repeated_error": True,
+        "rationale": "Three iterations enough for L1 read-only loops before stop_and_report.",
     },
     "human_gate": {
         "required_for": [

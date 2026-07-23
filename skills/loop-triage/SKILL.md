@@ -1,44 +1,54 @@
 ---
 name: loop-triage
 description: >
-  Daily / event triage loop for Hermes. Read STATE.md, scan recent signals
-  (git status, CI hints, open issues if available), update High Priority and
-  Watch List, write a short summary. Report-only by default; no source edits
-  unless the prompt explicitly allows a bounded fix.
+  Triage recent changes, CI failures, issues, and conversations.
+  Produces a concise, actionable findings report suitable for a loop to consume.
+  Writes structured output to a state file or Linear board.
+user_invocable: true
 ---
 
-# loop-triage
+# Loop Triage Skill
 
-## Defaults
-- Risk: **L1** (read-only report)
-- Deliver: prefer `local` when scheduled via cron
-- State file: `STATE.md` at workdir root
-- Pause flag: if `loop-pause-all: true` in STATE.md → exit immediately with "paused"
+You are an expert engineering triage agent. Your job is to produce a clean, prioritized list of things that a loop should consider acting on.
 
-## Steps
-1. Read `STATE.md`. If missing, create a minimal skeleton and continue.
-2. Observe repo/signals (cheap first):
-   - `git status -sb` / recent log if git repo
-   - obvious TODO/FIXME only if already in open files or STATE
-   - do not deep-crawl the entire monorepo
-3. Classify into:
-   - **High Priority** — broken build, security, data loss risk
-   - **Watch List** — smell, debt, follow-ups
-4. Update STATE.md timestamps and lists (merge, don't wipe history blindly).
-5. Optional: if prompt allows "propose patch only", emit a fenced unified diff — **do not apply**.
-6. End with a **5-line summary** suitable for cron delivery.
+## Inputs (the loop will provide these)
+- Recent CI / test failures (last 24h)
+- Open issues / Linear tickets assigned to the team
+- Recent commits on main (last 24–48h)
+- Any Slack / chat threads the loop has visibility into
+- The current state file (what the loop already knows about)
 
-## Verification
-- STATE.md has `Last run` updated
-- Summary ≤ 5 lines
-- No source tree edits unless explicitly requested and risk ≤ L2
+## Output Format
 
-## Cron example
-```bash
-hermes cron create "0 7 * * 1-5" \
-  --name "Daily triage" \
-  --deliver local \
-  --skill loop-triage \
-  --workdir "$PWD" \
-  "Run loop-triage. Read STATE.md. Merge findings. No code edits. 5-line summary."
+Produce a markdown report with these sections:
+
+### 1. High-Priority Items (act on these)
+- Clear, one-line description
+- Why it matters (impact, risk, or customer pain)
+- Suggested next action for the loop (e.g. "draft minimal fix in isolated worktree")
+- Rough effort estimate
+
+### 2. Watch Items (monitor, do not act yet)
+- Same format but lower urgency
+
+### 3. Noise / Ignore
+- Brief list of things the loop looked at and decided were not worth action
+
+### 4. State Updates
+- Any facts the loop should remember for the next run (e.g. "PR #1234 now has 2 approvals")
+
+## Rules
+
+- Be brutally concise. The loop (and the human reading the state) will thank you.
+- Only put something in "High-Priority" if a reasonable engineer would want to know about it today.
+- When in doubt, put it in Watch or Noise rather than creating work.
+- Never propose architectural overhauls during triage — this skill is for signal, not invention.
+- Respect the project's existing skills and conventions (they will be provided in context).
+
+## Example Invocation (in a Grok loop)
+
 ```
+/loop 30m Call $loop-triage and append the high-priority items to STATE.md. For any high-priority item that looks like a small bugfix, open a worktree and spawn a minimal-fix sub-agent.
+```
+
+The triage skill should be the "eyes" of the loop. Keep it focused and honest.

@@ -56,9 +56,11 @@ stop_conditions:
   stop_on_repeated_error: true
 human_gate:
   required_for:
-    - apply_patches
-    - public_posting
+    - deletion
     - secrets
+    - public_posting
+    - production_deploy
+    - payments
   approval_format: "APPROVE LOOP ACTION: <action> / <scope> / <rollback>"
 outputs:
   artifacts:
@@ -75,6 +77,7 @@ cycle:
 hermes:
   skill: loop-triage
   deliver: local
+  delegate: false
   cron_prompt: >
     Run loop-triage. Read STATE.md. Merge findings into High Priority and Watch List.
     Update Last run. Do not edit source code. End with a 5-line summary.

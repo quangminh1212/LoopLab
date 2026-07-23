@@ -1,128 +1,93 @@
 # LoopLab
 
-**Hermes-native loop engineering lab** — thiết kế contract, validate/score/dry-run, cài skill Hermes, và chạy vòng **observe → plan → act → verify → closeout** với receipt.
+**Hermes-native loop engineering lab** — 4 lớp đã được **vendor vào repo** (không chỉ link):
+
+| Lớp | Nguồn | Trong LoopLab |
+|---|---|---|
+| **Contract L0–L5** | [agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | `looplab validate/score/dry-run/privacy-scan` + receipt |
+| **Multi-step skill** | [loop-engineer](https://github.com/vibhasdutta/loop-engineer) (Hermes platform) | `skills/looplab/` + `agents/` + `scripts/init-loop.*` |
+| **Triage + cron + STATE** | [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | `skills/loop-triage/`, `patterns/hermes/`, `looplab cron-recipe` |
+| **OPAV cycle** | [proofrail / LoopCraft](https://github.com/410979729/proofrail-hermes) | `looplab/cycle.py`, `looplab cycle`, cycle[] trong loop-spec |
 
 ```text
-prompt mơ hồ  →  loop-spec  →  validate/score  →  dry-run receipt
-                                              →  manual Hermes run
-                                              →  hermes cron (deliver local)
+prompt  →  loop-spec (L0–L5)  →  validate/score/dry-run
+                                →  /looplab multi-agent (delegate_task)
+                                →  STATE.md + hermes cron (deliver local)
+                                →  observe→plan→act→verify→closeout + receipt
 ```
-
-## Tích hợp từ đâu?
-
-LoopLab **gộp ý tưởng** (không fork nguyên repo) từ:
-
-| Nguồn | Góp phần |
-|---|---|
-| [hermes-agent](https://github.com/NousResearch/hermes-agent) | Runtime: skills, cron, `/goal`, `delegate_task` |
-| [agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | Risk L0–L5, validate/score/dry-run/receipt |
-| [loop-engineer](https://github.com/vibhasdutta/loop-engineer) | Skill multi-step autonomous loop cho Hermes |
-| [loop-engineering](https://github.com/cobusgreyling/loop-engineering) | Daily triage + `hermes cron` + STATE.md |
-| [proofrail-hermes / LoopCraft](https://github.com/410979729/proofrail-hermes) | Kỷ luật OPAV + verify-after-mutation |
-| [Crucible](https://github.com/Siddhant-Goswami/Crucible) | Bounded act→verify harness mindset |
-
-Chi tiết: [SOURCES.md](SOURCES.md).
 
 ## Cài đặt
 
-```bash
+```powershell
 cd C:\Dev\LoopLab
 python -m pip install -e ".[dev]"
-looplab --help
-# hoặc
-python -m looplab --help
+python -m looplab install-hermes --force
 ```
 
-Cài skill vào Hermes:
-
-```powershell
-python -m looplab install-hermes
-# hoặc
-.\scripts\install_hermes.ps1
-```
+Cài skill vào `~/.hermes/skills/looplab` (agents + init scripts) và `loop-triage`.
 
 ## CLI
 
-| Lệnh | Việc |
+| Lệnh | Nguồn logic |
 |---|---|
-| `looplab init <dir\|file.yaml>` | Scaffold project hoặc 1 loop-spec |
-| `looplab validate <spec>` | Schema + safety gates |
-| `looplab score <spec>` | Chấm 0–100 (ready / usable / partial / not_loop_engineered) |
-| `looplab dry-run <spec> --out runs/x` | Run-record + receipt (**không** chạy Hermes) |
-| `looplab render-receipt <record>` | Markdown receipt |
-| `looplab install-hermes` | Copy skills → `~/.hermes/skills/` |
-| `looplab smoke` | Validate examples |
+| `looplab init` | scaffold project + STATE + HERMES |
+| `looplab validate` | kit schema + safety (danger aliases, L3 isolation, cron L3 block) |
+| `looplab score` | kit category weights (contract/safety/verification/…) |
+| `looplab dry-run` | kit contract dry-run + receipt |
+| `looplab privacy-scan` | kit secret/path scan |
+| `looplab cron-recipe daily-triage` | cobus hermes cron |
+| `looplab cycle` / `cycle --doc` | LoopCraft OPAV panel |
+| `looplab install-hermes` | vendor skills → Hermes home |
+| `looplab smoke` | examples regression |
 
-## Golden path (10 phút)
-
-```bash
-looplab init ./my-loop
-looplab validate ./my-loop/loop-spec.yaml
-looplab score ./my-loop/loop-spec.yaml
-looplab dry-run ./my-loop/loop-spec.yaml --out ./my-loop/runs/first
-```
-
-Sau dry-run: mở Hermes trong project, gõ `/looplab` hoặc:
+## Multi-step trong Hermes
 
 ```text
-Use loop-spec.yaml as contract for one manual read-only run.
-Update STATE.md. Write receipt. Do not create cron jobs yet.
+/looplab
 ```
 
-Cron (tuần 1, deliver local):
+Hoặc `/looplab build|research|patch|audit` — team: resource-scout, researcher, planner, agent-factory, executor, auditor, verifier, memory-keeper qua `delegate_task`.
 
-```bash
-hermes cron create "0 7 * * 1-5" \
-  --name "Daily triage" \
-  --deliver local \
-  --skill loop-triage \
-  --workdir "$PWD" \
-  "Run loop-triage. Read STATE.md. No code edits. 5-line summary."
+Init loop stack:
+
+```powershell
+& "$env:USERPROFILE\.hermes\skills\looplab\scripts\init-loop.ps1" `
+  -LoopId "my-goal" -Goal "..." -Stop "..." -Git no -Mode build -Platform hermes
 ```
 
-## Skills Hermes
+## Cron triage (tuần 1 = local)
 
-- `skills/looplab/SKILL.md` — `/looplab` design|run|triage|goal  
-- `skills/loop-triage/SKILL.md` — triage lặp (cron-friendly)
+```powershell
+python -m looplab cron-recipe daily-triage
+# paste lệnh hermes cron create ... --deliver local --skill loop-triage
+```
 
-## Risk classes
+Pattern đầy đủ: `patterns/hermes/daily-triage.md`, `patterns/hermes/pr-babysitter.md`.
 
-| Class | Ý nghĩa |
-|---|---|
-| L0 | Advisory một lần |
-| L1 | Báo cáo read-only lặp |
-| L2 | Ghi report/state local |
-| L3 | Sửa repo (worktree + tests + verifier) |
-| L4 | Side-effect ngoài (duyệt mỗi lần) |
-| L5 | Tiền/secrets/xóa/prod (chặn trừ khi approve + rollback) |
-
-## Cấu trúc repo
+## Cấu trúc
 
 ```text
 LoopLab/
-  looplab/          # CLI package
-  schemas/          # loop-spec schema
-  templates/        # loop-spec, STATE, HERMES
-  skills/           # Hermes skills
-  examples/         # daily-briefing, daily-triage, prompt-only (weak)
-  scripts/          # install helpers
-  tests/
+  looplab/                 # CLI package (contract + cycle + cron + install)
+  skills/looplab/          # multi-step skill + agents + init-loop scripts
+  skills/loop-triage/      # cobus triage skill
+  patterns/hermes/         # cron / triage docs
+  patterns/opav/           # LoopCraft design notes
+  templates/               # loop-spec, STATE, HERMES, budget/run-log
+  examples/                # daily-briefing, daily-triage, prompt-only
+  schemas/                 # loop-spec.schema.json
 ```
 
 ## Test
 
-```bash
+```powershell
 python -m pip install -e ".[dev]"
 python -m pytest -q
 python -m looplab smoke
+python -m looplab cron-recipe daily-triage
+python -m looplab cycle --doc
 ```
-
-## Không phải gì
-
-- Không thay Hermes runtime / gateway  
-- Dry-run **không** thực thi agent  
-- Không bật cron L4/L5 giúp bạn “an toàn” — contract chỉ **bắt buộc mô tả** gates  
 
 ## License
 
-MIT
+MIT — code LoopLab; upstream patterns MIT-compatible, see [SOURCES.md](SOURCES.md).
