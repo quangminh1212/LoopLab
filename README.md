@@ -56,8 +56,10 @@ python -m looplab detach
 
 ```text
 /looplab
-/looplab build|research|patch|audit
+/looplab build|research|patch|audit|triage
 ```
+
+Mode **triage** = report-only (`STATE.md` priorities); same rules as skill sibling `loop-triage` (cron: `--skill loop-triage`).
 
 Init loop stack (sau attach, path trỏ SoT qua junction):
 

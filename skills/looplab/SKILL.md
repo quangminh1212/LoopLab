@@ -3,15 +3,15 @@ name: looplab
 description: >
   LoopLab multi-step loop for Hermes. Integrates: contract L0–L5 (validate/score/receipt),
   multi-agent team via delegate_task, STATE.md + hermes cron triage, and OPAV cycle
-  (observe→plan→act→verify→closeout). Modes: build / research / patch / audit.
-  Activate with /looplab.
+  (observe→plan→act→verify→closeout). Modes: build / research / patch / audit / triage.
+  Activate with /looplab or /looplab triage.
 compatibility: Requires git and a terminal backend (local, docker, ssh, modal, or daytona)
 metadata:
   author: LoopLab
-  version: "0.2.2"
+  version: "0.2.3"
   sources: [agent-loop-engineering-kit, loop-engineer, cobusgreyling/loop-engineering, proofrail-LoopCraft]
   hermes:
-    tags: [orchestration, multi-agent, loop-engineering, autonomous, coding, looplab]
+    tags: [orchestration, multi-agent, loop-engineering, autonomous, coding, looplab, triage]
     category: development
     requires_toolsets: [terminal]
 ---
@@ -28,6 +28,7 @@ You are running **LoopLab** loop engineering on Hermes Agent.
 | **OPAV cycle** | Every unit of work: **observe → plan → act → verify → closeout** |
 | **STATE** | Read/update `STATE.md` for triage/durable memory across runs |
 | **Multi-agent** | `delegate_task(tasks=[...])` for parallel leaf agents |
+| **Triage** | Mode `triage` (or sibling skill `loop-triage`) is the loop's **eyes** — signal only, no invention |
 
 Core rule: *A loop is not done because the agent says so — only when verify passes, stop reason is recorded, and a receipt exists.*
 
@@ -46,11 +47,40 @@ looplab cron-recipe daily-triage
 looplab attach|detach
 ```
 
+Attached skills after `attach`: **`looplab`** (this package) + **`loop-triage`** (standalone cron/report skill; same triage rules as mode `triage` below).
+
+---
+
+## Mode: triage (built-in)
+
+When MODE=`triage` (or user says `/looplab triage`, "daily triage", "triage STATE"), **do not** run the multi-agent build loop. Run this short report-only path instead (same contract as sibling skill `loop-triage`).
+
+### Inputs
+- Recent CI / test failures (last 24h)
+- Open issues / tickets if visible
+- Recent commits on main (last 24–48h)
+- Chat threads if the session has them
+- Current `STATE.md` (read before write)
+
+### Output → merge into STATE.md
+1. **High-Priority** — act today (one-line, why, suggested next action, rough effort)
+2. **Watch** — monitor only
+3. **Noise / Ignore** — brief list of discarded signal
+4. **State Updates** — facts for next run + update **Last run** timestamp
+
+End with a **≤5-line summary**. Default: **no source code edits**. OPAV still applies: observe signals → plan priorities → act (write STATE) → verify (timestamp + sections present) → closeout (summary).
+
+### Rules (triage)
+- Brutally concise. Only High-Priority if a reasonable engineer would want to know **today**.
+- When in doubt → Watch or Noise, not work.
+- No architectural overhauls — signal, not invention.
+- Cron/standalone: `looplab cron-recipe daily-triage` → `hermes cron ... --skill loop-triage`.
+
 ---
 
 ## Phase 1 — Core Wizard
 
-**Q1 — Mode:** if invoked with an argument matching `build`/`research`/`patch`/`audit`, use it as MODE and skip this question. Otherwise ask: "Mode? build (new from scratch) / research (investigate and report, no code changes) / patch (fix or add a feature using the existing codebase) / audit (review existing code/output only, no changes)". Default to `build` if unclear.
+**Q1 — Mode:** if invoked with an argument matching `build`/`research`/`patch`/`audit`/`triage`, use it as MODE and skip this question. Otherwise ask: "Mode? build (new from scratch) / research (investigate and report, no code changes) / patch (fix or add a feature using the existing codebase) / audit (review existing code/output only, no changes) / triage (report-only STATE.md priorities, no code)". Default to `build` if unclear. If MODE=`triage`, skip Q2–Q3 and jump to **Mode: triage** (no `loop-stack/` init).
 
 **Q2:** "What do you want the loop to accomplish? (1-2 sentences)"
 
@@ -175,7 +205,7 @@ Write `loop-stack/<LOOP_ID>/AGENTS.md` with `# Specialized Agents\n## Status\nNO
 
 Initialize: `turns_used = 0`, `skipped_tasks = []`.
 
-**Mode gating:** build (default) — full flow. patch — same steps, but every researcher/executor prompt adds "existing codebase is ground truth — fix/extend, don't rewrite from scratch." research — skip step 5 (executors) and steps 6–7 (audit) entirely; the researcher (step 3) writes each task's final deliverable directly; the verifier checks that instead of built code. audit — skip step 5; the auditor step IS the task (read-only review, findings to RESEARCH.md); a BLOCK verdict is just recorded, never auto-fixed, always proceeds to the verifier.
+**Mode gating:** build (default) — full flow. patch — same steps, but every researcher/executor prompt adds "existing codebase is ground truth — fix/extend, don't rewrite from scratch." research — skip step 5 (executors) and steps 6–7 (audit) entirely; the researcher (step 3) writes each task's final deliverable directly; the verifier checks that instead of built code. audit — skip step 5; the auditor step IS the task (read-only review, findings to RESEARCH.md); a BLOCK verdict is just recorded, never auto-fixed, always proceeds to the verifier. triage — **does not enter Phase 5**; use **Mode: triage** only (STATE.md report, no loop-stack).
 
 For each dispatch step: put every agent's task definition in one `delegate_task(tasks=[...])` call — this blocks until all of them return, then you have every result at once.
 
@@ -254,7 +284,7 @@ Write `REPORT.md` inside the renamed loop directory and print summary.
 - **Executors append to MEMORY.md directly** during work.
 - **Planner**: once at startup after researchers + resource-scout. Tasks MUST include [G1]/[G2] parallel group tags.
 - **Fully autonomous**: no pauses. Audit BLOCK → auto-fix once → skip. 3 verifier fails → auto-skip.
-- **Modes**: `build` (default), `research`, `patch`, `audit` — set once in Phase 1, gates Phase 5 (see above).
+- **Modes**: `build` (default), `research`, `patch`, `audit`, `triage` — set once in Phase 1; `triage` never enters multi-agent Phase 5 (see **Mode: triage**).
 - **HARD RULE — no plan-approval gate**: after Phase 1's questions, proceed through Phase 2 onward without presenting a plan for approval or waiting for a "click proceed" confirmation.
 - No resume support: every invocation starts a fresh loop. On completion: rename to `<LOOP_ID>_DONE/` (bookkeeping only).
 - **HERMES.md**: ensure `HERMES.md` (from `platforms/hermes/HERMES.md`) is in the project root for workspace context.
