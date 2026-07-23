@@ -2,8 +2,8 @@
 
 ## Loop
 - Name: daily-triage
-- Last run: never
-- Last status: never
+- Last run: 2026-07-23T23:31:16+07:00
+- Last status: healthy; no actionable findings
 
 ## High Priority
 - (none)
@@ -12,7 +12,9 @@
 - (none)
 
 ## Last findings
-- (none)
+- No recent CI failures found.
+- Recent commit `769dcf1` adds the daily triage loop example; no action required.
+- No issue or chat inputs were available.
 
 ## Flags
 - loop-pause-all: false
