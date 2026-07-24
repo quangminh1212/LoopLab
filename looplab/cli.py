@@ -143,28 +143,52 @@ def _cmd_cron_recipe(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sources(args: argparse.Namespace) -> int:
+    from looplab.sources import check_catalog, format_catalog
+
+    print(format_catalog())
+    return 0 if not check_catalog() else 1
+
+
 def _cmd_cycle(args: argparse.Namespace) -> int:
     if args.doc:
         print(render_cycle_doc())
         return 0
-    from looplab.cycle import Phase, load_cycle_state, save_cycle_state
+    from looplab.cycle import get_profile, list_profiles, load_cycle_state, save_cycle_state
+
+    if args.list_profiles:
+        for name in list_profiles():
+            meta = get_profile(name)
+            print(f"  {name:16} {meta.get('title')} — {meta.get('source')}")
+        return 0
 
     project = Path(args.project) if args.project else None
+    profile = (args.profile or "opav").strip().lower()
+    try:
+        get_profile(profile)
+    except KeyError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
     if project:
         state = load_cycle_state(project)
     else:
-        state = CycleState()
+        state = CycleState(profile=profile)
+    if args.profile:
+        # switch profile resets phase to first unless also advancing on existing
+        if state.profile != profile or args.reset:
+            state = CycleState(profile=profile)
+        else:
+            state.profile = profile
     if args.reset:
-        state = CycleState()
+        state = CycleState(profile=profile)
     if args.advance:
         n = max(1, int(args.advance))
         for _ in range(n):
             state.advance()
     if args.mutate:
-        state.phase = Phase.ACT
         state.record_mutation()
     if args.verify is not None:
-        state.phase = Phase.VERIFY
         state.record_verification(args.verify)
     if project:
         path = save_cycle_state(project, state)
@@ -176,7 +200,23 @@ def _cmd_cycle(args: argparse.Namespace) -> int:
 
 
 def _cmd_smoke(args: argparse.Namespace) -> int:
+    from looplab.sources import check_catalog
+
     root = Path(__file__).resolve().parent.parent
+    problems = check_catalog(root)
+    if problems:
+        print("FAIL sources:", file=sys.stderr)
+        for p in problems:
+            print(f"  - {p}", file=sys.stderr)
+        return 1
+    print("sources catalog: PASS")
+    from looplab.cycle import CYCLE_PROFILES, CycleState
+
+    for name in CYCLE_PROFILES:
+        st = CycleState(profile=name)
+        st.advance()
+        print(f"  [OK] cycle profile {name} → {st.phase}")
+
     examples = list((root / "examples").rglob("loop-spec.yaml"))
     if not examples:
         print("smoke: no examples found", file=sys.stderr)
@@ -275,8 +315,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--deliver", default=None, help="Override deliver (default local)")
     s.set_defaults(func=_cmd_cron_recipe)
 
-    s = sub.add_parser("cycle", help="Show OPAV cycle panel (LoopCraft discipline)")
+    s = sub.add_parser("cycle", help="Show cycle panel (OPAV / hermes-coding / kit)")
     s.add_argument("--doc", action="store_true", help="Full cycle documentation")
+    s.add_argument("--list-profiles", action="store_true", help="List cycle profiles")
+    s.add_argument(
+        "--profile",
+        default=None,
+        help="Cycle profile: opav | hermes-coding | kit",
+    )
     s.add_argument(
         "--project",
         default=None,
@@ -290,7 +336,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Advance N phases (default 1 when flag present)",
     )
-    s.add_argument("--reset", action="store_true", help="Reset cycle to observe")
+    s.add_argument("--reset", action="store_true", help="Reset cycle to first phase")
     s.add_argument("--mutate", action="store_true", help="Simulate a mutation")
     s.add_argument(
         "--verify",
@@ -300,6 +346,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
     )
     s.set_defaults(func=_cmd_cycle)
+
+    s = sub.add_parser("sources", help="List equivalent GitHub projects + integration check")
+    s.set_defaults(func=_cmd_sources)
 
     s = sub.add_parser("smoke", help="Validate bundled examples")
     s.set_defaults(func=_cmd_smoke)

@@ -1,0 +1,70 @@
+schema_version: "1"
+lab: looplab
+entries:
+  - id: agent-loop-engineering-kit
+    url: https://github.com/AlekseiUL/agent-loop-engineering-kit
+    license: MIT
+    status: integrated
+    role: L0–L5 contract validate/score/dry-run/privacy/receipt
+    evidence:
+      - looplab/validate.py
+      - looplab/score.py
+      - looplab/privacy.py
+      - looplab/receipt.py
+  - id: loop-engineer
+    url: https://github.com/vibhasdutta/loop-engineer
+    license: MIT
+    status: integrated
+    role: Multi-step Hermes skill + agents + init-loop scripts
+    evidence:
+      - skills/looplab/SKILL.md
+      - skills/looplab/scripts/init-loop.ps1
+  - id: loop-engineering
+    url: https://github.com/cobusgreyling/loop-engineering
+    license: MIT
+    status: integrated
+    role: Triage mode, cron recipes, hermes patterns, STATE templates
+    evidence:
+      - patterns/hermes/daily-triage.md
+      - looplab/cron_recipe.py
+  - id: proofrail-hermes
+    url: https://github.com/410979729/proofrail-hermes
+    license: upstream
+    status: integrated
+    role: OPAV cycle (LoopCraft)
+    evidence:
+      - looplab/cycle.py
+      - patterns/opav/LoopCraft-DESIGN.md
+  - id: hermes-coding
+    url: https://github.com/douglas-ou/hermes-coding
+    license: MIT
+    status: integrated
+    role: 4-phase clarify→breakdown→implement→deliver cycle profile
+    evidence:
+      - looplab/cycle.py
+  - id: loopkit
+    url: https://github.com/Archive228/loopkit
+    license: MIT
+    status: integrated
+    role: Battle-tested coding-agent skills catalog (reference patterns)
+    evidence:
+      - patterns/upstream/loopkit-INDEX.md
+  - id: hermes-agent
+    url: https://github.com/NousResearch/hermes-agent
+    license: MIT
+    status: integrated
+    role: Host runtime junction
+    evidence:
+      - looplab/install.py
+  - id: agentic-loop-course
+    url: https://github.com/FareedKhan-dev/agentic-loop-engineering-course
+    license: upstream
+    status: referenced
+    role: Educational notebooks on agentic loop components
+    evidence: []
+  - id: how-agent-loop-engineering
+    url: https://github.com/breath57/how-agent-loop-engineering
+    license: upstream
+    status: referenced
+    role: Chinese deep-dive series on loop engineering
+    evidence: []

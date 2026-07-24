@@ -75,3 +75,16 @@ def test_cli_cycle_advance_persists(tmp_path: Path):
     p = run("cycle", "--project", str(target), "--advance")
     assert p.returncode == 0, p.stdout + p.stderr
     assert "phase: **act**" in p.stdout
+
+
+def test_cli_sources_and_hermes_coding_profile():
+    p = run("sources")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "check: PASS" in p.stdout
+    p = run("cycle", "--list-profiles")
+    assert p.returncode == 0
+    assert "hermes-coding" in p.stdout
+    assert "kit" in p.stdout
+    p = run("cycle", "--profile", "hermes-coding", "--advance")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "phase: **breakdown**" in p.stdout

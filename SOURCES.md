@@ -1,15 +1,21 @@
 # Sources — vendored into LoopLab
 
-LoopLab **copies and adapts** the following public materials. Not git submodules; paths below are the integration surface.
+Machine-readable: [`sources/catalog.yaml`](sources/catalog.yaml) · CLI: `looplab sources`
 
-| Upstream | License | Vendored as |
+LoopLab **copies and adapts** the following public materials. Not full git submodules of every upstream (size/license); integration is code + patterns + cycle profiles.
+
+| Upstream | License | Integration |
 |---|---|---|
-| [AlekseiUL/agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | MIT | `looplab/validate.py` safety rules, `score.py` categories, `privacy.py`, dry-run receipt shape |
-| [vibhasdutta/loop-engineer](https://github.com/vibhasdutta/loop-engineer) `platforms/hermes` | MIT | `skills/looplab/SKILL.md`, `skills/looplab/agents/**`, `skills/looplab/scripts/init-loop.*` (rebranded looplab) |
-| [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | MIT | triage rules in `skills/looplab/SKILL.md` (mode triage), `patterns/hermes/*`, `templates/*budget*`, STATE templates, `looplab/cron_recipe.py` |
-| [410979729/proofrail-hermes](https://github.com/410979729/proofrail-hermes) (LoopCraft) | check upstream | `looplab/cycle.py` OPAV, `patterns/opav/LoopCraft-DESIGN.md` |
-| [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | MIT | host runtime mapping only |
+| [AlekseiUL/agent-loop-engineering-kit](https://github.com/AlekseiUL/agent-loop-engineering-kit) | MIT | **integrated** — validate/score/privacy/receipt + cycle profile `kit` |
+| [vibhasdutta/loop-engineer](https://github.com/vibhasdutta/loop-engineer) | MIT | **integrated** — `skills/looplab/` multi-step |
+| [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering) | MIT | **integrated** — triage, cron, patterns/hermes |
+| [410979729/proofrail-hermes](https://github.com/410979729/proofrail-hermes) | check | **integrated** — OPAV cycle profile `opav` |
+| [douglas-ou/hermes-coding](https://github.com/douglas-ou/hermes-coding) | MIT | **integrated** — cycle profile `hermes-coding` |
+| [Archive228/loopkit](https://github.com/Archive228/loopkit) | MIT | **integrated** — `patterns/upstream/loopkit-INDEX.md` map |
+| [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | MIT | **integrated** — attach host |
+| [FareedKhan-dev/agentic-loop-engineering-course](https://github.com/FareedKhan-dev/agentic-loop-engineering-course) | check | referenced — education |
+| [breath57/how-agent-loop-engineering](https://github.com/breath57/how-agent-loop-engineering) | check | referenced — deep-dive series |
 
-## Rule preserved from all four
+## Rule preserved
 
 > A loop is not done because an agent says it is done. It is done when verification passes, the stop reason is recorded, and the receipt is readable.
