@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from looplab.io_util import dump_json, dump_yaml, load_spec
+from looplab.io_util import dump_json, dump_yaml, load_spec, resolve_spec_path
 from looplab.score import score_spec
 from looplab.validate import validate_spec
 
@@ -140,9 +140,13 @@ def write_dry_run(
     *,
     min_score: int = 0,
 ) -> dict[str, Path]:
-    path = Path(spec_path)
+    path = resolve_spec_path(spec_path)
+    project_dir = path.resolve().parent
     spec = load_spec(path)
     out = Path(out_dir)
+    if not out.is_absolute():
+        # Prefer project-local runs/ over caller's cwd (user often passes project dir).
+        out = project_dir / out
     out.mkdir(parents=True, exist_ok=True)
     record = build_run_record(spec, spec_path=path, min_score=min_score)
     record_path = out / "run-record.yaml"
@@ -159,7 +163,7 @@ def write_dry_run(
     if cfg_receipt:
         p = Path(cfg_receipt)
         if not p.is_absolute():
-            p = Path.cwd() / p
+            p = project_dir / p
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(render_receipt_md(record), encoding="utf-8")
         written["configured_receipt"] = p

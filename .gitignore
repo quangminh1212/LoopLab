@@ -34,3 +34,8 @@ Thumbs.db
 
 # Hermes local install markers
 .hermes-install-log.txt
+
+# generated dry-run receipts under examples
+examples/**/receipts/*.md
+examples/**/runs/
+

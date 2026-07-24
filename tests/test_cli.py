@@ -46,3 +46,19 @@ def test_cli_init(tmp_path: Path):
     assert p.returncode == 0, p.stdout + p.stderr
     assert (target / "loop-spec.yaml").is_file()
     assert (target / "STATE.md").is_file()
+
+
+def test_cli_accepts_project_directory(tmp_path: Path):
+    """User flow: init dir then validate/score/dry-run with the directory path."""
+    target = tmp_path / "loop-dir"
+    p = run("init", str(target))
+    assert p.returncode == 0, p.stdout + p.stderr
+    p = run("validate", str(target))
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "PASS" in p.stdout
+    p = run("score", str(target))
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "score:" in p.stdout
+    p = run("dry-run", str(target), "--out", "runs/dry-run")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert (target / "runs" / "dry-run" / "receipt.md").is_file()
