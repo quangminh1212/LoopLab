@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 class Phase(str, Enum):
@@ -101,3 +104,50 @@ def render_cycle_doc() -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def cycle_state_path(project_dir: str | Path) -> Path:
+    return Path(project_dir) / "state" / "opav-cycle.yaml"
+
+
+def load_cycle_state(project_dir: str | Path) -> CycleState:
+    """Load durable OPAV panel from project ``state/opav-cycle.yaml`` if present."""
+    path = cycle_state_path(project_dir)
+    if not path.is_file():
+        return CycleState()
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return CycleState()
+    if not isinstance(data, dict):
+        return CycleState()
+    phase_raw = str(data.get("phase") or "observe").lower()
+    try:
+        phase = Phase(phase_raw)
+    except ValueError:
+        phase = Phase.OBSERVE
+    notes = data.get("notes") or []
+    if not isinstance(notes, list):
+        notes = []
+    return CycleState(
+        phase=phase,
+        pending_verification=bool(data.get("pending_verification")),
+        mutations=int(data.get("mutations") or 0),
+        notes=[str(n) for n in notes],
+    )
+
+
+def save_cycle_state(project_dir: str | Path, state: CycleState) -> Path:
+    path = cycle_state_path(project_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "phase": state.phase.value,
+        "pending_verification": state.pending_verification,
+        "mutations": state.mutations,
+        "notes": list(state.notes[-32:]),
+    }
+    path.write_text(
+        yaml.safe_dump(payload, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    return path

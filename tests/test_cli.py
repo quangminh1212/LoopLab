@@ -62,3 +62,16 @@ def test_cli_accepts_project_directory(tmp_path: Path):
     p = run("dry-run", str(target), "--out", "runs/dry-run")
     assert p.returncode == 0, p.stdout + p.stderr
     assert (target / "runs" / "dry-run" / "receipt.md").is_file()
+
+
+def test_cli_cycle_advance_persists(tmp_path: Path):
+    target = tmp_path / "cycle-proj"
+    p = run("init", str(target))
+    assert p.returncode == 0, p.stdout + p.stderr
+    p = run("cycle", "--project", str(target), "--advance")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "phase: **plan**" in p.stdout
+    assert (target / "state" / "opav-cycle.yaml").is_file()
+    p = run("cycle", "--project", str(target), "--advance")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "phase: **act**" in p.stdout

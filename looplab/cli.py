@@ -147,18 +147,31 @@ def _cmd_cycle(args: argparse.Namespace) -> int:
     if args.doc:
         print(render_cycle_doc())
         return 0
-    state = CycleState()
-    if args.mutate:
-        from looplab.cycle import Phase
+    from looplab.cycle import Phase, load_cycle_state, save_cycle_state
 
+    project = Path(args.project) if args.project else None
+    if project:
+        state = load_cycle_state(project)
+    else:
+        state = CycleState()
+    if args.reset:
+        state = CycleState()
+    if args.advance:
+        n = max(1, int(args.advance))
+        for _ in range(n):
+            state.advance()
+    if args.mutate:
         state.phase = Phase.ACT
         state.record_mutation()
     if args.verify is not None:
-        from looplab.cycle import Phase
-
         state.phase = Phase.VERIFY
         state.record_verification(args.verify)
-    print(state.panel())
+    if project:
+        path = save_cycle_state(project, state)
+        print(state.panel())
+        print(f"\nsaved: {path}")
+    else:
+        print(state.panel())
     return 0
 
 
@@ -264,6 +277,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("cycle", help="Show OPAV cycle panel (LoopCraft discipline)")
     s.add_argument("--doc", action="store_true", help="Full cycle documentation")
+    s.add_argument(
+        "--project",
+        default=None,
+        help="Project dir — load/save durable state/opav-cycle.yaml",
+    )
+    s.add_argument(
+        "--advance",
+        nargs="?",
+        const=1,
+        type=int,
+        default=None,
+        help="Advance N phases (default 1 when flag present)",
+    )
+    s.add_argument("--reset", action="store_true", help="Reset cycle to observe")
     s.add_argument("--mutate", action="store_true", help="Simulate a mutation")
     s.add_argument(
         "--verify",

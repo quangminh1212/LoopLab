@@ -49,7 +49,7 @@ python -m looplab detach
 | `looplab validate` / `score` / `dry-run` | contract L0–L5 |
 | `looplab privacy-scan` | quét secret |
 | `looplab cron-recipe daily-triage` | lệnh `hermes cron` |
-| `looplab cycle` | panel OPAV |
+| `looplab cycle` | panel OPAV (`--advance` / `--project` durable) |
 | `looplab smoke` | regression examples |
 
 ## Multi-step trong Hermes (sau attach)
