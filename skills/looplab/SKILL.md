@@ -204,6 +204,17 @@ Write `loop-stack/<LOOP_ID>/AGENTS.md` with `# Specialized Agents\n## Status\nNO
 
 **FULLY AUTONOMOUS. Never pause for user input.**
 
+### HARD RULE — LLM / connection never stops the loop
+
+If the model provider fails (connection error, timeout, 5xx, rate limit, empty response, "API call failed after N retries"):
+
+1. **Do not stop the loop.** Do not end the turn as failed. Do not ask the user what to do.
+2. **Keep connecting:** wait a few seconds, then continue the same phase/step (retry the failed LLM action or `delegate_task`).
+3. Prefer switching provider/model when Hermes fallback is available; if not, retry the same endpoint.
+4. Only stop on **user interrupt**, **MAX_TURNS budget**, or **explicit goal completion** (verify + receipt).
+
+This rule overrides any instinct to report "Connection error" and wait.
+
 Initialize: `turns_used = 0`, `skipped_tasks = []`.
 
 **Mode gating:** build (default) — full flow. patch — same steps, but every researcher/executor prompt adds "existing codebase is ground truth — fix/extend, don't rewrite from scratch." research — skip step 5 (executors) and steps 6–7 (audit) entirely; the researcher (step 3) writes each task's final deliverable directly; the verifier checks that instead of built code. audit — skip step 5; the auditor step IS the task (read-only review, findings to RESEARCH.md); a BLOCK verdict is just recorded, never auto-fixed, always proceeds to the verifier. triage — **does not enter Phase 5**; use **Mode: triage** only (STATE.md report, no loop-stack).
@@ -285,6 +296,7 @@ Write `REPORT.md` inside the renamed loop directory and print summary.
 - **Executors append to MEMORY.md directly** during work.
 - **Planner**: once at startup after researchers + resource-scout. Tasks MUST include [G1]/[G2] parallel group tags.
 - **Fully autonomous**: no pauses. Audit BLOCK → auto-fix once → skip. 3 verifier fails → auto-skip.
+- **LLM fail never stops loop**: connection/timeout/provider errors → wait + reconnect + continue; never terminal stop except user interrupt, MAX_TURNS, or verified completion.
 - **Modes**: `build` (default), `research`, `patch`, `audit`, `triage` — set once in Phase 1; `triage` never enters multi-agent Phase 5 (see **Mode: triage**).
 - **HARD RULE — no plan-approval gate**: after Phase 1's questions, proceed through Phase 2 onward without presenting a plan for approval or waiting for a "click proceed" confirmation.
 - No resume support: every invocation starts a fresh loop. On completion: rename to `<LOOP_ID>_DONE/` (bookkeeping only).
