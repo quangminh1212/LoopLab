@@ -8,7 +8,7 @@ description: >
 compatibility: Requires git and a terminal backend (local, docker, ssh, modal, or daytona)
 metadata:
   author: LoopLab
-  version: "0.2.4"
+  version: "0.2.7"
   sources: [agent-loop-engineering-kit, loop-engineer, cobusgreyling/loop-engineering, proofrail-LoopCraft]
   hermes:
     tags: [orchestration, multi-agent, loop-engineering, autonomous, coding, looplab, triage]

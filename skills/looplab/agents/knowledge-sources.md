@@ -63,18 +63,23 @@ This is a reference for the researcher agent. Read the goal and current task, id
 
 ## 6. AI & Machine Learning
 
+**Hub:** [AI_PowerUp](https://github.com/quangminh1212/AI_PowerUp) (700+ repos) · LoopLab: `looplab sources --index`
 **Models & Weights:** Hugging Face, Ollama Library, OpenRouter, Replicate
-**Frameworks:** LangChain, LlamaIndex, CrewAI, AutoGen, DSPy, Haystack
+**Frameworks:** LangChain, LangGraph, LlamaIndex, CrewAI, AutoGen, smolagents, PydanticAI, DSPy, Haystack
+**Coding agents:** OpenHands, Codex, Claude Code, Aider, SWE-agent, Continue, Goose, DeerFlow
+**Harness:** [awesome-harness-engineering](https://github.com/ai-boost/awesome-harness-engineering), loopkit, agent-loop-engineering-kit
 **Datasets:** Hugging Face Datasets, Kaggle, UCI ML Repository
-**Benchmarks:** Papers With Code, LMSYS Chatbot Arena, HELM
+**Benchmarks:** Papers With Code, LMSYS Chatbot Arena, HELM, lm-evaluation-harness, deepeval
+**Detail file:** `agents/knowledge-sources/06-ai-machine-learning.md`
 
 ---
 
 ## 7. MCP Servers & Agent Tools
 
-**Discovery:** GitHub (search "mcp-server" or "awesome-mcp"), Smithery, MCP.so
+**Discovery:** GitHub (search "mcp-server" or "awesome-mcp"), Smithery, MCP.so · `looplab sources --index --category mcp-servers`
+**Official:** https://github.com/modelcontextprotocol/servers
 **Skills / Plugins:** Platform skill directories, agentskills.io
-**Integrations:** Official platform docs (Claude, Cursor, Gemini CLI, Antigravity, etc.)
+**Integrations:** Official platform docs (Claude, Cursor, Gemini CLI, Hermes, etc.)
 
 ---
 

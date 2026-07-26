@@ -1,10 +1,13 @@
 schema_version: "1"
 lab: looplab
+# Full AI/agent repo index (732): sources/ai-agent-index.yaml — CLI: looplab sources --index
 entries:
+  # --- Loop engineering (integrated into LoopLab code) ---
   - id: agent-loop-engineering-kit
     url: https://github.com/AlekseiUL/agent-loop-engineering-kit
     license: MIT
     status: integrated
+    category: loop
     role: L0–L5 contract validate/score/dry-run/privacy/receipt
     evidence:
       - looplab/validate.py
@@ -15,6 +18,7 @@ entries:
     url: https://github.com/vibhasdutta/loop-engineer
     license: MIT
     status: integrated
+    category: loop
     role: Multi-step Hermes skill + agents + init-loop scripts
     evidence:
       - skills/looplab/SKILL.md
@@ -23,6 +27,7 @@ entries:
     url: https://github.com/cobusgreyling/loop-engineering
     license: MIT
     status: integrated
+    category: loop
     role: Triage mode, cron recipes, hermes patterns, STATE templates
     evidence:
       - patterns/hermes/daily-triage.md
@@ -31,6 +36,7 @@ entries:
     url: https://github.com/410979729/proofrail-hermes
     license: upstream
     status: integrated
+    category: loop
     role: OPAV cycle (LoopCraft)
     evidence:
       - looplab/cycle.py
@@ -39,6 +45,7 @@ entries:
     url: https://github.com/douglas-ou/hermes-coding
     license: MIT
     status: integrated
+    category: loop
     role: 4-phase clarify→breakdown→implement→deliver cycle profile
     evidence:
       - looplab/cycle.py
@@ -46,6 +53,7 @@ entries:
     url: https://github.com/Archive228/loopkit
     license: MIT
     status: integrated
+    category: loop
     role: Battle-tested coding-agent skills catalog (reference patterns)
     evidence:
       - patterns/upstream/loopkit-INDEX.md
@@ -53,6 +61,7 @@ entries:
     url: https://github.com/NousResearch/hermes-agent
     license: MIT
     status: integrated
+    category: loop
     role: Host runtime junction
     evidence:
       - looplab/install.py
@@ -60,11 +69,315 @@ entries:
     url: https://github.com/FareedKhan-dev/agentic-loop-engineering-course
     license: upstream
     status: referenced
+    category: loop
     role: Educational notebooks on agentic loop components
     evidence: []
   - id: how-agent-loop-engineering
     url: https://github.com/breath57/how-agent-loop-engineering
     license: upstream
     status: referenced
+    category: loop
     role: Chinese deep-dive series on loop engineering
+    evidence: []
+
+  # --- Agent harness catalogs (improve AI agents systematically) ---
+  - id: awesome-harness-engineering
+    url: https://github.com/ai-boost/awesome-harness-engineering
+    license: CC0-1.0
+    status: referenced
+    category: harness
+    role: Awesome list + templates for agent harness engineering (70+ projects analysis)
+    evidence: []
+  - id: picrew-awesome-agent-harness
+    url: https://github.com/Picrew/awesome-agent-harness
+    license: upstream
+    status: referenced
+    category: harness
+    role: Implementation-first agent harness project list
+    evidence: []
+  - id: rucaibox-awesome-agent-harness
+    url: https://github.com/RUCAIBox/awesome-agent-harness
+    license: upstream
+    status: referenced
+    category: harness
+    role: Survey reading list for harness engineering papers
+    evidence: []
+  - id: walkinglabs-awesome-harness
+    url: https://github.com/walkinglabs/awesome-harness-engineering
+    license: upstream
+    status: referenced
+    category: harness
+    role: Tools and guides for harness engineering
+    evidence: []
+  - id: agents-best-practices
+    url: https://github.com/DenisSergeevitch/agents-best-practices
+    license: upstream
+    status: referenced
+    category: harness
+    role: Production-ready agent harness skill pack
+    evidence: []
+  - id: multi-agents-debate
+    url: https://github.com/Skytliang/Multi-Agents-Debate
+    license: GPL-3.0
+    status: referenced
+    category: harness
+    role: Multi-agent debate engine (NexusLab pillar)
+    evidence: []
+  - id: chateval
+    url: https://github.com/thunlp/ChatEval
+    license: MIT
+    status: referenced
+    category: harness
+    role: Multi-agent evaluator personas
+    evidence: []
+  - id: swe-debate
+    url: https://github.com/YerbaPage/SWE-Debate
+    license: upstream
+    status: referenced
+    category: harness
+    role: Software-issue multi-agent debate
+    evidence: []
+  - id: superpowers
+    url: https://github.com/obra/superpowers
+    license: upstream
+    status: referenced
+    category: harness
+    role: Cross-agent skills + TDD + worktree methodology
+    evidence: []
+
+  # --- AI ecosystem hub (732 repos indexed in ai-agent-index.yaml) ---
+  - id: ai-powerup
+    url: https://github.com/quangminh1212/AI_PowerUp
+    license: upstream
+    status: referenced
+    category: ecosystem
+    role: Hub 732 curated AI/agent OSS repos (agents, frameworks, RAG, MCP, eval, …)
+    evidence:
+      - sources/ai-agent-index.yaml
+    local_path: C:/Dev/AI_PowerUp
+
+  # --- Sibling labs that support AI/agents (local SoT) ---
+  - id: lab-agentlab
+    url: https://github.com/quangminh1212/AgentLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Memory + skills workspace; integrations hub for all labs
+    evidence: []
+    local_path: C:/Dev/AgentLab
+  - id: lab-nexuslab
+    url: https://github.com/quangminh1212/NexusLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Multi-AI harness / MAD council / AHE
+    evidence: []
+    local_path: C:/Dev/NexusLab
+  - id: lab-crewlab
+    url: https://github.com/quangminh1212/CrewLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Multi-agent crew (one agent one task) + DeerFlow
+    evidence: []
+    local_path: C:/Dev/CrewLab
+  - id: lab-jarvislab
+    url: https://github.com/quangminh1212/JarvisLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Voice MCP mic/speaker for agents
+    evidence: []
+    local_path: C:/Dev/JarvisLab
+  - id: lab-workerlab
+    url: https://github.com/quangminh1212/WorkerLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Live coding-agent activity monitor + job queue
+    evidence: []
+    local_path: C:/Dev/WorkerLab
+  - id: lab-clonelab
+    url: https://github.com/quangminh1212/CloneLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Git clone registry + based_on lineage for agent projects
+    evidence: []
+    local_path: C:/Dev/CloneLab
+  - id: lab-routerlab
+    url: https://github.com/quangminh1212/RouterLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: AI router / multi-provider gateway
+    evidence: []
+    local_path: C:/Dev/RouterLab
+  - id: lab-tokenlab
+    url: https://github.com/quangminh1212/TokenLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Local token usage and cost tracker for agents
+    evidence: []
+    local_path: C:/Dev/TokenLab
+  - id: lab-aibenchlab
+    url: https://github.com/quangminh1212/AI_BenchLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Multi-provider LLM benchmark and identity probe
+    evidence: []
+    local_path: C:/Dev/AI_BenchLab
+  - id: lab-hermes-zalo
+    url: https://github.com/quangminh1212/Hermes_Zalo
+    license: MIT
+    status: referenced
+    category: lab
+    role: Zalo channel bridge for Hermes agents
+    evidence: []
+    local_path: C:/Dev/Hermes_Zalo
+  - id: lab-mythlab
+    url: https://github.com/quangminh1212/MythLab
+    license: MIT
+    status: referenced
+    category: lab
+    role: Story / creative AI writing lab
+    evidence: []
+    local_path: C:/Dev/MythLab
+  - id: lab-xrouter
+    url: https://github.com/quangminh1212/XRouter
+    license: upstream
+    status: referenced
+    category: lab
+    role: Related AI router stack
+    evidence: []
+    local_path: C:/Dev/XRouter
+
+  # --- High-signal coding agents & frameworks (subset; full list in ai-agent-index) ---
+  - id: openai-codex
+    url: https://github.com/openai/codex
+    license: upstream
+    status: referenced
+    category: agent
+    role: Terminal-native agentic coding (OpenAI)
+    evidence: []
+  - id: claude-code
+    url: https://github.com/anthropics/claude-code
+    license: upstream
+    status: referenced
+    category: agent
+    role: Agentic terminal coder with codebase understanding
+    evidence: []
+  - id: openhands
+    url: https://github.com/All-Hands-AI/OpenHands
+    license: MIT
+    status: referenced
+    category: agent
+    role: Open-source multi-tool coding agent platform
+    evidence: []
+  - id: aider
+    url: https://github.com/paul-gauthier/aider
+    license: Apache-2.0
+    status: referenced
+    category: agent
+    role: Git-native AI pair programmer
+    evidence: []
+  - id: swe-agent
+    url: https://github.com/SWE-agent/SWE-agent
+    license: MIT
+    status: referenced
+    category: agent
+    role: Autonomous software engineering agent
+    evidence: []
+  - id: continue-dev
+    url: https://github.com/continuedev/continue
+    license: Apache-2.0
+    status: referenced
+    category: agent
+    role: Open-source IDE AI assistant
+    evidence: []
+  - id: goose
+    url: https://github.com/block-open-source/goose
+    license: Apache-2.0
+    status: referenced
+    category: agent
+    role: Block open-source AI developer agent
+    evidence: []
+  - id: crewai
+    url: https://github.com/crewAIInc/crewAI
+    license: MIT
+    status: referenced
+    category: framework
+    role: Role-based multi-agent orchestration
+    evidence: []
+  - id: autogen
+    url: https://github.com/microsoft/autogen
+    license: CC-BY-4.0
+    status: referenced
+    category: framework
+    role: Conversational multi-agent framework (MS)
+    evidence: []
+  - id: langgraph
+    url: https://github.com/langchain-ai/langgraph
+    license: MIT
+    status: referenced
+    category: framework
+    role: Graph-based agent workflow orchestration
+    evidence: []
+  - id: langchain
+    url: https://github.com/langchain-ai/langchain
+    license: MIT
+    status: referenced
+    category: framework
+    role: Foundational LLM application framework
+    evidence: []
+  - id: smolagents
+    url: https://github.com/huggingface/smolagents
+    license: Apache-2.0
+    status: referenced
+    category: framework
+    role: Lightweight HF agent framework
+    evidence: []
+  - id: pydantic-ai
+    url: https://github.com/pydantic/pydantic-ai
+    license: MIT
+    status: referenced
+    category: framework
+    role: Type-safe agent framework
+    evidence: []
+  - id: openai-agents-python
+    url: https://github.com/openai/openai-agents-python
+    license: MIT
+    status: referenced
+    category: framework
+    role: Official OpenAI agents SDK
+    evidence: []
+  - id: deer-flow
+    url: https://github.com/bytedance/deer-flow
+    license: upstream
+    status: referenced
+    category: agent
+    role: Long-horizon SuperAgent (ByteDance; CrewLab submodule)
+    evidence: []
+  - id: browser-use
+    url: https://github.com/browser-use/browser-use
+    license: MIT
+    status: referenced
+    category: agent
+    role: Browser automation agent
+    evidence: []
+  - id: mem0
+    url: https://github.com/mem0ai/mem0
+    license: Apache-2.0
+    status: referenced
+    category: memory
+    role: Persistent memory layer for AI agents
+    evidence: []
+  - id: mcp-spec
+    url: https://github.com/modelcontextprotocol/servers
+    license: MIT
+    status: referenced
+    category: mcp
+    role: Official MCP reference servers
     evidence: []

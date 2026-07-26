@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "looplab"
-version = "0.2.4"
-description = "LoopLab — Hermes-native loop engineering lab (spec, validate, score, dry-run, skills)"
+version = "0.2.7"
+description = "LoopLab — Hermes-native loop engineering lab (spec, validate, score, dry-run, skills, AI/agent sources)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

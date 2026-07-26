@@ -50,6 +50,7 @@ python -m looplab detach
 | `looplab privacy-scan` | quét secret |
 | `looplab cron-recipe daily-triage` | lệnh `hermes cron` |
 | `looplab cycle` | panel OPAV (`--advance` / `--project` durable) |
+| `looplab sources` | loop + harness + labs; `--index` = 700+ AI/agent repos (AI_PowerUp) |
 | `looplab smoke` | regression examples |
 
 ## Multi-step trong Hermes (sau attach)

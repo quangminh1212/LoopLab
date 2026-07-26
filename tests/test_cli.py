@@ -81,6 +81,21 @@ def test_cli_sources_and_hermes_coding_profile():
     p = run("sources")
     assert p.returncode == 0, p.stdout + p.stderr
     assert "check: PASS" in p.stdout
+    assert "ai-powerup" in p.stdout.lower() or "AI_PowerUp" in p.stdout or "ai-powerup" in p.stdout
+    assert "agent-loop-engineering-kit" in p.stdout
+    p = run("sources", "--category", "harness")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "awesome-harness" in p.stdout.lower() or "harness" in p.stdout.lower()
+    p = run("sources", "--category", "lab")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "nexuslab" in p.stdout.lower() or "lab-nexuslab" in p.stdout
+    p = run("sources", "--markdown")
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "| Status |" in p.stdout or "LoopLab sources" in p.stdout
+    # full index file must exist and be loadable via --index --limit
+    assert (ROOT / "sources" / "ai-agent-index.yaml").is_file()
+    p = run("sources", "--index", "--limit", "5", "--category", "agents")
+    assert p.returncode == 0, p.stdout + p.stderr
     p = run("cycle", "--list-profiles")
     assert p.returncode == 0
     assert "hermes-coding" in p.stdout

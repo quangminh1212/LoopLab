@@ -155,9 +155,41 @@ def _cmd_cron_recipe(args: argparse.Namespace) -> int:
 
 
 def _cmd_sources(args: argparse.Namespace) -> int:
-    from looplab.sources import check_catalog, format_catalog
+    from looplab.sources import (
+        check_catalog,
+        format_catalog,
+        write_ai_agent_index_from_powerup,
+    )
 
-    print(format_catalog())
+    if getattr(args, "refresh_powerup", None):
+        from pathlib import Path as _P
+
+        root = _P(args.refresh_powerup)
+        if not root.is_dir():
+            print(f"error: AI_PowerUp path not found: {root}", file=sys.stderr)
+            return 1
+        dest, n = write_ai_agent_index_from_powerup(root)
+        print(f"refreshed ai-agent-index: {n} repos → {dest}")
+        # continue to list unless --refresh-only
+        if getattr(args, "refresh_only", False):
+            return 0
+
+    text = format_catalog(
+        include_index=bool(getattr(args, "index", False)),
+        include_local=bool(getattr(args, "local", False)),
+        category=getattr(args, "category", None),
+        status=getattr(args, "status", None),
+        q=getattr(args, "query", None),
+        markdown=bool(getattr(args, "markdown", False)),
+        max_index=getattr(args, "limit", None),
+    )
+    if getattr(args, "out", None):
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text + "\n", encoding="utf-8")
+        print(f"wrote {out}")
+    else:
+        print(text)
     return 0 if not check_catalog() else 1
 
 
@@ -358,7 +390,46 @@ def build_parser() -> argparse.ArgumentParser:
     )
     s.set_defaults(func=_cmd_cycle)
 
-    s = sub.add_parser("sources", help="List equivalent GitHub projects + integration check")
+    s = sub.add_parser(
+        "sources",
+        help="List loop + AI/agent support repos (catalog + optional full index)",
+    )
+    s.add_argument(
+        "--index",
+        action="store_true",
+        help="Include full AI_PowerUp mirror (sources/ai-agent-index.yaml, 700+ repos)",
+    )
+    s.add_argument(
+        "--local",
+        action="store_true",
+        help="Also discover sibling labs under C:/Dev",
+    )
+    s.add_argument(
+        "--category",
+        default=None,
+        help="Filter: loop|harness|lab|agent|framework|ecosystem|memory|mcp|…",
+    )
+    s.add_argument("--status", default=None, help="Filter: integrated|referenced|indexed|local")
+    s.add_argument("-q", "--query", default=None, help="Substring filter on id/url/role")
+    s.add_argument("--markdown", action="store_true", help="Emit markdown table")
+    s.add_argument("--out", default=None, help="Write listing to file")
+    s.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Cap number of index rows when using --index",
+    )
+    s.add_argument(
+        "--refresh-powerup",
+        default=None,
+        metavar="PATH",
+        help="Regenerate ai-agent-index.yaml from AI_PowerUp tree (e.g. C:/Dev/AI_PowerUp)",
+    )
+    s.add_argument(
+        "--refresh-only",
+        action="store_true",
+        help="With --refresh-powerup: only regenerate index, skip listing",
+    )
     s.set_defaults(func=_cmd_sources)
 
     s = sub.add_parser("smoke", help="Validate bundled examples")
